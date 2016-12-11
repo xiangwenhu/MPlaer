@@ -1,0 +1,31 @@
+{
+  "name": "mplayer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "ejs": "^2.5.5",
+    "koa": "^2.0.0-alpha.7",
+    "koa-bodyparser": "^3.2.0",
+    "koa-router": "^7.0.1",
+    "koa-session2": "^1.0.8",
+    "koa-static": "^3.0.0",
+    "koa-views": "^5.2.0",
+    "log4js": "^1.0.1",
+    "request": "^2.79.0",
+    "vue": "^2.0.0-rc.8"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiangwenhu/MPlaer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xiangwenhu/MPlaer/issues"
+  },
+  "homepage": "https://github.com/xiangwenhu/MPlaer#readme"
+}
