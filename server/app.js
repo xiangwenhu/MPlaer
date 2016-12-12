@@ -58,9 +58,9 @@ routes(app)
 
 //异常
 app.on('error', (err, ctx) => {
-  logger.error(ctx.url)
-  logger.error(err)
-  logger.error(err.stack)
+  console.log(ctx.url)
+  console.log(err)
+  console.log(err.stack)
 })
 
 
