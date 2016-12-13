@@ -11,12 +11,10 @@ const app = new Koa()
 app.use(bodyparser())
 
 //模板
-app.use(views(__dirname + '/views', {
-  extension: 'ejs'
-}))
+app.use(views(path.resolve(__dirname,'../client/dist')))
 
 //静态服务器资源
-app.use(koaStatic(path.resolve(__dirname,'../client')))
+app.use(koaStatic(path.resolve(__dirname,'../client/public')))
 
 //自定义错误处理
 app.use(async (ctx, next) => {

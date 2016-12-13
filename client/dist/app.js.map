@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack:///./client/src/app.js"],"names":[],"mappings":";;;;;AAAA,mB","file":"app.js","sourcesContent":["console.log('音乐盒子')\n\n\n//////////////////\n// WEBPACK FOOTER\n// ./client/src/app.js\n// module id = 3\n// module chunks = 0"],"sourceRoot":""}
