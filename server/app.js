@@ -14,7 +14,7 @@ app.use(bodyparser())
 app.use(views(path.resolve(__dirname,'../client/dist')))
 
 //静态服务器资源
-app.use(koaStatic(path.resolve(__dirname,'../client/public')))
+app.use(koaStatic(path.resolve(__dirname,'../client')))
 
 //自定义错误处理
 app.use(async (ctx, next) => {
