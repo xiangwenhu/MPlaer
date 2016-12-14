@@ -1,5 +1,5 @@
 <template>
-    <div class="default-main" id="mainContent">
+    <div id="page-song" class="tab-page reelList_922366 ui-reelList ui-widget ui-tabs-panel ui-widget-content ui-corner-bottom fullHeartShow list-temp">
         <div class="ui-reelList-header ui-state-default" style="overflow: hidden;">
             <div class="ui-reelList-header-column c0" style="overflow: hidden;">
                 <div class="ui-reelList-checkbox"></div>
@@ -29,12 +29,13 @@
                     </ul>
                 </div>
             </div>
-            <div class="ui-reelList-header-column c3">
-                <div class="sort-item" data-sortkey="heartCol"></div>
+        </div>
+        <div class="ui-reelList-viewport">
+            <div class="ui-reelList-canvas">
+                <song v-for="item in songs" :key="item.id" :song="item">
+                </song>
             </div>
         </div>
-        <song v-for="item in songs" :key="item.id" :song="item">
-        </song>
     </div>
 </template>
 
@@ -54,10 +55,19 @@
                 songs:[{
                    title:'海阔天空',
                    artist:'beyond',
-                   album:'海阔天空',
+                   album:'海阔天空'
                 }]            
             }
         }
     }
 
 </script>
+
+<style>
+    .ui-reelList-header-column{
+        position:relative;
+        display: inline-block;
+        width: 28%;
+    }
+
+</style>

@@ -1,9 +1,20 @@
 <template>
-    <div>   
-       {{title}}
+    <div>
        <search-box></search-box>
 
-       <song-list></song-list>
+       <div class="default-main" id="mainContent">
+           <div class="main-wrapper">
+               <div class="mb-layout-bd column2">
+                    <div class="tab-main ui-tabs ui-widget ui-widget-content ui-corner-all" id="tab">
+                        <div class="tab-content cfix">
+                            <song-list></song-list>
+                        </div>
+                    </div>                    
+               </div>
+           </div>
+
+       </div>
+       
 
        <player></player>
 

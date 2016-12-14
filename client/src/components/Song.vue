@@ -14,9 +14,6 @@
             <a class="a-link">{{song.artist}}</a>
         </div>
         <div class="ui-reelList-cell  c2">《<a class="a-link">{{song.album}}</a>》</div>
-        <div class="ui-reelList-cell heartColumn c3">
-            <div class="playlist-heart"> </div>
-        </div>
     </div>
 
     <div class="ui-reelList-viewport">
@@ -32,3 +29,11 @@
         props:['song']        
     }
 </script>
+
+<style>
+    .ui-reelList-cell{
+        position:relative;
+        display: inline-block;
+        width: 28%;
+    }
+</style>
