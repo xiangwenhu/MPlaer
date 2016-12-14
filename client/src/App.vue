@@ -41,3 +41,9 @@
         }
     }
 </script>
+
+<style>
+    .column2{
+        right:190px
+    }
+</style>

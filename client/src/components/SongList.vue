@@ -69,5 +69,8 @@
         display: inline-block;
         width: 28%;
     }
+    .ui-reelList-cell , .ui-reelList-header-column {
+        padding: 0
+    }
 
 </style>
