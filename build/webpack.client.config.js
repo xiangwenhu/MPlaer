@@ -31,13 +31,13 @@ if (process.env.NODE_ENV === 'production') {
     // this is needed in webpack 2 for minifying CSS
     new webpack.LoaderOptionsPlugin({
       minimize: true
-    }),
+    })
     // minify JS
-    new webpack.optimize.UglifyJsPlugin({
+    /*new webpack.optimize.UglifyJsPlugin({
       compress: {
         warnings: false
-      }
-    })   
+      } 
+    }) */  
   )
 }
 

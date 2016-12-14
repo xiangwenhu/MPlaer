@@ -21,13 +21,13 @@ app.use(async (ctx, next) => {
   try {
     await next()
     if (ctx.status === 404) {
-      ctx.render('404', {
+      await ctx.render('404', {
         msg: '404 未找到'
       })
     }
   } catch (err) {
     let status = err.status || 500
-    ctx.render('500', {
+    await ctx.render('500', {
       status,
       msg: '服务器内部错误' + err.body || err.message
     })
