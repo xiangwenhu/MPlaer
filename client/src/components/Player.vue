@@ -14,42 +14,22 @@
                             <a class="wg-button" hidefocus="true" title="下一首[→]"><span class="wg-button-inner"></span></a>
                         </li>
                     </ul>
-                </div>                
-                <div class="right-panel">
-                    <div class="playmod" id="playMode">
-                        <span class="list-mode" title="顺序播放"></span>
-                    </div>
-
-                    <div class="volume" id="volumeWrap">
-                        <a class="mute wg-button" hidefocus="true" title="静音"><span class="wg-button-inner"></span></a>
-                        <div class="vol-slider-wrapper">
-                            <div id="volSlider" class="vol-slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
-                                <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 86%;"><span class="ui-slider-range-inner"></span></div><a class="ui-slider-handle ui-state-default ui-corner-all"
-                                    hidefocus="true" style="left: 86%;"><span></span></a></div>
-                        </div>
-                    </div>
-                    <div class="hq" id="hq">
-                        <div class="hq-switch" id="hqSwitch">
-                            <i class="icon vip-gold-new"></i>
-                            <span class="hq-desc">选择音质</span>
-                        </div>
-                        <div class="hq-switch-loading"></div>
-                    </div>
                 </div>
                 <div class="main-panel">
                     <div class="pane">
                         <audio id="player" controls> </audio>
                     </div>
                 </div>
+                <div class="right-panel">
+                    <a href="javascript:;" id="switchFm" class="switch-fm-btn" title="随便听听">
+                        <i class="icon-ting"></i>
+                        <span>随心听</span>
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="switch-fm-btn-wrapper">
-            <a href="javascript:;" id="switchFm" class="switch-fm-btn" title="随便听听">
-                <i class="icon-ting"></i>
-                <span>随心听</span>
-            </a>
-        </div>
+
     </div>
 </template>
 
@@ -59,3 +39,31 @@
     }
 
 </script>
+
+<style>
+    #player {       
+        width: 100%
+    }
+    
+    .mb-layout-ft {
+        text-align: left;
+    }
+    
+    .left-panel {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+    
+    .main-panel {
+        width: auto;
+        margin: 22px 150px
+    }
+    
+    .right-panel {
+        position: absolute;
+        width: 120px;
+        top: 22px;
+        right: 0;
+    }
+</style>

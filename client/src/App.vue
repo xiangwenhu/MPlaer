@@ -2,6 +2,9 @@
     <div>   
        {{title}}
        <search-box></search-box>
+
+       <song-list></song-list>
+
        <player></player>
 
     </div>
@@ -10,12 +13,14 @@
 <script>    
     import SearchBox from './components/SearchBox.vue'
     import Player from './components/Player.vue'
+    import SongList from './components/SongList.vue'
     export default {
         name:'appp',
 
         components:{
             SearchBox,
-            Player
+            Player,
+            SongList
         },
         
         data(){
