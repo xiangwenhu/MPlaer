@@ -17,7 +17,7 @@
                 </div>
                 <div class="main-panel">
                     <div class="pane">
-                        <audio id="player" controls> </audio>
+                        <audio id="player" controls :data-id="playingId" @ended="ended"> </audio>
                     </div>
                 </div>
                 <div class="right-panel">
@@ -28,16 +28,46 @@
                 </div>
             </div>
         </div>
-
-
     </div>
 </template>
 
 <script>
-    export default {
-        name:'player'
-    }
 
+    import apiProxy from '../apiProxy'   
+    let playerC = document.querySelector('player') 
+ 
+
+    export default {
+        name:'player',
+        props:['playingId'],
+        data(){
+            return {
+                url:null
+            }
+        },
+        computed:{
+            songId(){
+                return this.playingId
+            }
+        },
+        methods:
+        {
+            ended:function(ev){
+                console.log('ended song')
+                this.$emit('playNextSong',null)
+            }
+        },
+        watch:{
+            async songId(to,from){
+                console.log('player got new songid:' + to)
+                if(to !== from){
+                    let detail = await apiProxy.songDetail(to)
+                    player.src = '/api/song?fileLink=' + detail.bitrate['file_link']
+                    player.play()
+                }
+            }
+        }
+    }
 </script>
 
 <style>

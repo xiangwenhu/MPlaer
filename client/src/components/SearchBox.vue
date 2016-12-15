@@ -4,9 +4,9 @@
             <div id="searchBar" style="left:556px">
                 <div action="search">
                     <span class="ui-watermark-container ui-watermark-input">                        
-                        <input type="text" placeholder="输入歌曲、歌手、专辑名" size="24" class="sug-input" autocomplete="off" name="key" id="search-sug-input">
+                        <input @keyup.enter="search" v-model="keyWords" type="text" placeholder="输入歌曲、歌手、专辑名" size="24" class="sug-input" autocomplete="off" name="key" id="search-sug-input">
                     </span>
-                    <input type="submit" id="search-sug-submit" value="">
+                    <input type="button" id="search-sug-submit" value="" @click="search">
                     <div class="sug-result" style="display: none;">
                         <p class="sug-source sug-quku">曲库搜索</p>
                         <dl class="sug-artist clearfix">
@@ -26,15 +26,25 @@
 </template>
 
 <script>
+
+import store from '../store/store'
+import apiProxy from '../apiProxy'
+
 export default {
   name: 'search-box',  
-  data () {
-    return {     
+  data() {
+    return {
+        keyWords:'海'
     }
   },
   computed: {   
   },
   methods: {   
+     search:async function(ev){
+         console.log('execute searching')
+         let datas = await apiProxy.search(this.keyWords)      
+         store.state.songs.splice(0,store.state.songs.length,...(datas.song||[]))
+      }
   }
 }
 </script>

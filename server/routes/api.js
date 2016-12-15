@@ -15,5 +15,10 @@ router.get('/search/:keyWords', async (ctx)=>{
     let fileLink = ctx.query.fileLink    
     ctx.body = apiProxy.mediaStream(fileLink)	
 })
+//歌曲详情
+.get('/song/detail/:id',async(ctx)=>{
+    let detail = await apiProxy.songDetail(ctx.params.id)
+    ctx.body = detail
+})
 
 module.exports = router

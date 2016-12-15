@@ -31,7 +31,7 @@
             </div>
         </div>
         <div class="ui-reelList-viewport">
-            <div class="ui-reelList-canvas">
+            <div class="ui-reelList-canvas" @click="changeId">
                 <song v-for="item in songs" :key="item.id" :song="item">
                 </song>
             </div>
@@ -44,21 +44,28 @@
 
 <script>
     import Song from './Song.vue'
+    import store from '../store/store'
+
+    console.log(store.state.songs)
+
     export default {
         name:'song-list',
         components:{
             Song
         },
         data(){
-             return {
-                loading: false,  
-                songs:[{
-                   title:'海阔天空',
-                   artist:'beyond',
-                   album:'海阔天空'
-                }]            
+            return{
+                songs: store.state.songs
             }
-        }
+        },
+        methods:{
+            changeId:function(ev){
+                let el = ev.target
+                if(el.getAttribute("data-id") != null){
+                    this.$emit('changePlayId',el.getAttribute("data-id"))
+                }
+            }
+        }        
     }
 
 </script>
@@ -67,10 +74,13 @@
     .ui-reelList-header-column{
         position:relative;
         display: inline-block;
-        width: 28%;
+        width: 26%;
     }
     .ui-reelList-cell , .ui-reelList-header-column {
         padding: 0
+    }
+    .ui-reelList-row{
+        position: relative
     }
 
 </style>

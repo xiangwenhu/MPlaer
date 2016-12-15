@@ -1,5 +1,72 @@
 webpackJsonp([0],[
 /* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(4);
+
+
+const defaultState = {
+    loading:false, /* 是否loading */
+    status:0,    /*  播放状态 */
+    playingId:-1, /* 播放的id */
+    songs:[],
+    artists:[],
+    albums:[]
+}
+
+/* 本地缓存 */
+const localCache = {
+    playingList:[{
+        songname:'海阔天空',
+        songid:'268425156'
+    },{
+        songname:'火星人来过',
+        songid:'278860063'
+    }]
+}
+
+/* harmony default export */ exports["a"] = {    
+    state:defaultState,   
+    async search(keyWords){
+        let datas = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].search(keyWords)
+        return datas
+     },
+     async songDetail(id){
+         let detail = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].songDetail(id)
+         return detail
+     },
+
+
+    cache:localCache,    
+    addSong(songs){
+        if(songs instanceof Array){
+            /* 同样可以push */
+            this.cache.playingList.splice(0,0,...songs)
+        }else{
+            if(this.cache.playingList.findIndex(s=>{
+                return s.songid == songs.songid
+            }) < 0){
+             this.cache.playingList.push(songs)
+            }
+        }
+    },
+    deleteSong(id){
+        let index = this.cache.playingList.findIndex(value=>{
+            value.id === id
+        })
+        if(index>0){
+            this.cache.playingList.splice(index,1)
+        }        
+    },
+    clearSongs(){
+        this.cache.playingList.splice(0, this.cache.playingList.length)
+    }
+};
+
+
+/***/ },
+/* 1 */
 /***/ function(module, exports) {
 
 /*
@@ -55,7 +122,7 @@ module.exports = function() {
 
 
 /***/ },
-/* 1 */
+/* 2 */
 /***/ function(module, exports) {
 
 /*
@@ -277,21 +344,50 @@ function applyToTag(styleElement, obj) {
 
 
 /***/ },
-/* 2 */,
-/* 3 */
+/* 3 */,
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+const defaultOptions = {
+    headers:{
+        isFetch:1
+    }
+}
+
+/* harmony default export */ exports["a"] = {
+    baseUrl:'/api/',
+    fetchData(url,options = defaultOptions){
+        return new Promise((resolve,reject)=>{
+            fetch(url,options).then(response=>response.json())
+            .then(data=>resolve(data)).catch(err=>reject(err))
+        })
+    },
+    async search(title){
+       let datas = await this.fetchData(this.baseUrl + 'search/'+ title)
+       return datas
+    },
+    async songDetail(id){
+        let detail  = await this.fetchData(this.baseUrl + 'song/detail/' + id)
+        return detail
+    }
+};
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(12)
+__webpack_require__(13)
 
 /* script */
-__vue_exports__ = __webpack_require__(17)
+__vue_exports__ = __webpack_require__(22)
 
 /* template */
-var __vue_template__ = __webpack_require__(25)
+var __vue_template__ = __webpack_require__(30)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -310,44 +406,16 @@ module.exports = __vue_exports__
 
 
 /***/ },
-/* 4 */,
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, ".ui-reelList-header-column{position:relative;display:inline-block;width:28%}.ui-reelList-cell,.ui-reelList-header-column{padding:0}", ""]);
-
-// exports
-
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, "#player{width:100%}.mb-layout-ft{text-align:left}.left-panel{position:absolute;left:0;top:0}.main-panel{width:auto;margin:22px 150px}.right-panel{position:absolute;width:120px;top:22px;right:0}", ""]);
-
-// exports
-
-
-/***/ },
+/* 6 */,
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(1)();
 // imports
 
 
 // module
-exports.push([module.i, ".ui-reelList-cell{position:relative;display:inline-block;width:28%}", ""]);
+exports.push([module.i, ".ui-reelList-cell{position:relative;display:inline-block;width:26%}", ""]);
 
 // exports
 
@@ -356,7 +424,7 @@ exports.push([module.i, ".ui-reelList-cell{position:relative;display:inline-bloc
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(1)();
 // imports
 
 
@@ -370,79 +438,43 @@ exports.push([module.i, ".column2{right:190px}", ""]);
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-// style-loader: Adds some css to the DOM by adding a <style> tag
+exports = module.exports = __webpack_require__(1)();
+// imports
 
-// load the styles
-var content = __webpack_require__(5);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-0260b2f2!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-0260b2f2!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
+
+// module
+exports.push([module.i, "#player{width:100%}.mb-layout-ft{text-align:left}.left-panel{position:absolute;left:0;top:0}.main-panel{width:auto;margin:22px 150px}.right-panel{position:absolute;width:120px;top:22px;right:0}", ""]);
+
+// exports
+
 
 /***/ },
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-// style-loader: Adds some css to the DOM by adding a <style> tag
+exports = module.exports = __webpack_require__(1)();
+// imports
 
-// load the styles
-var content = __webpack_require__(6);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-367b7580!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-367b7580!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
+
+// module
+exports.push([module.i, ".ui-reelList-header-column{position:relative;display:inline-block;width:26%}.ui-reelList-cell,.ui-reelList-header-column{padding:0}.ui-reelList-row{position:relative}", ""]);
+
+// exports
+
 
 /***/ },
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-// style-loader: Adds some css to the DOM by adding a <style> tag
+exports = module.exports = __webpack_require__(1)();
+// imports
 
-// load the styles
-var content = __webpack_require__(7);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-40a26998!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-40a26998!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
+
+// module
+exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30px}.playingList .text{color:inherit}.playingItem{background-color:rgba(68,141,119,.24)}", ""]);
+
+// exports
+
 
 /***/ },
 /* 12 */
@@ -451,17 +483,17 @@ if(false) {
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(8);
+var content = __webpack_require__(7);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
+var update = __webpack_require__(2)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-5564ad7a!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue", function() {
-			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-5564ad7a!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-308ccab6!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-308ccab6!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -474,110 +506,121 @@ if(false) {
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-var __vue_exports__, __vue_options__
-var __vue_styles__ = {}
+// style-loader: Adds some css to the DOM by adding a <style> tag
 
-/* styles */
-__webpack_require__(10)
-
-/* script */
-__vue_exports__ = __webpack_require__(18)
-
-/* template */
-var __vue_template__ = __webpack_require__(23)
-__vue_options__ = __vue_exports__ = __vue_exports__ || {}
-if (
-  typeof __vue_exports__.default === "object" ||
-  typeof __vue_exports__.default === "function"
-) {
-__vue_options__ = __vue_exports__ = __vue_exports__.default
+// load the styles
+var content = __webpack_require__(8);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(2)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-6bb45ffc!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue", function() {
+			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-6bb45ffc!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
 }
-if (typeof __vue_options__ === "function") {
-  __vue_options__ = __vue_options__.options
-}
-
-__vue_options__.render = __vue_template__.render
-__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
-
-module.exports = __vue_exports__
-
 
 /***/ },
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-var __vue_exports__, __vue_options__
-var __vue_styles__ = {}
+// style-loader: Adds some css to the DOM by adding a <style> tag
 
-/* script */
-__vue_exports__ = __webpack_require__(19)
-
-/* template */
-var __vue_template__ = __webpack_require__(26)
-__vue_options__ = __vue_exports__ = __vue_exports__ || {}
-if (
-  typeof __vue_exports__.default === "object" ||
-  typeof __vue_exports__.default === "function"
-) {
-__vue_options__ = __vue_exports__ = __vue_exports__.default
+// load the styles
+var content = __webpack_require__(9);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(2)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-761e6c42!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-761e6c42!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
 }
-if (typeof __vue_options__ === "function") {
-  __vue_options__ = __vue_options__.options
-}
-
-__vue_options__.render = __vue_template__.render
-__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
-
-module.exports = __vue_exports__
-
 
 /***/ },
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-var __vue_exports__, __vue_options__
-var __vue_styles__ = {}
+// style-loader: Adds some css to the DOM by adding a <style> tag
 
-/* styles */
-__webpack_require__(11)
-
-/* script */
-__vue_exports__ = __webpack_require__(20)
-
-/* template */
-var __vue_template__ = __webpack_require__(24)
-__vue_options__ = __vue_exports__ = __vue_exports__ || {}
-if (
-  typeof __vue_exports__.default === "object" ||
-  typeof __vue_exports__.default === "function"
-) {
-__vue_options__ = __vue_exports__ = __vue_exports__.default
+// load the styles
+var content = __webpack_require__(10);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(2)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-a561bd18!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-a561bd18!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
 }
-if (typeof __vue_options__ === "function") {
-  __vue_options__ = __vue_options__.options
-}
-
-__vue_options__.render = __vue_template__.render
-__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
-
-module.exports = __vue_exports__
-
 
 /***/ },
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(11);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(2)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-f2208e4a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./PlayingList.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-f2208e4a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./PlayingList.vue");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
 var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(9)
+__webpack_require__(14)
 
 /* script */
-__vue_exports__ = __webpack_require__(21)
+__vue_exports__ = __webpack_require__(23)
 
 /* template */
-var __vue_template__ = __webpack_require__(22)
+var __vue_template__ = __webpack_require__(31)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -596,16 +639,144 @@ module.exports = __vue_exports__
 
 
 /***/ },
-/* 17 */
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+var __vue_exports__, __vue_options__
+var __vue_styles__ = {}
+
+/* styles */
+__webpack_require__(16)
+
+/* script */
+__vue_exports__ = __webpack_require__(24)
+
+/* template */
+var __vue_template__ = __webpack_require__(33)
+__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+if (
+  typeof __vue_exports__.default === "object" ||
+  typeof __vue_exports__.default === "function"
+) {
+__vue_options__ = __vue_exports__ = __vue_exports__.default
+}
+if (typeof __vue_options__ === "function") {
+  __vue_options__ = __vue_options__.options
+}
+
+__vue_options__.render = __vue_template__.render
+__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+
+module.exports = __vue_exports__
+
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+var __vue_exports__, __vue_options__
+var __vue_styles__ = {}
+
+/* script */
+__vue_exports__ = __webpack_require__(25)
+
+/* template */
+var __vue_template__ = __webpack_require__(29)
+__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+if (
+  typeof __vue_exports__.default === "object" ||
+  typeof __vue_exports__.default === "function"
+) {
+__vue_options__ = __vue_exports__ = __vue_exports__.default
+}
+if (typeof __vue_options__ === "function") {
+  __vue_options__ = __vue_options__.options
+}
+
+__vue_options__.render = __vue_template__.render
+__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+
+module.exports = __vue_exports__
+
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+var __vue_exports__, __vue_options__
+var __vue_styles__ = {}
+
+/* styles */
+__webpack_require__(12)
+
+/* script */
+__vue_exports__ = __webpack_require__(26)
+
+/* template */
+var __vue_template__ = __webpack_require__(28)
+__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+if (
+  typeof __vue_exports__.default === "object" ||
+  typeof __vue_exports__.default === "function"
+) {
+__vue_options__ = __vue_exports__ = __vue_exports__.default
+}
+if (typeof __vue_options__ === "function") {
+  __vue_options__ = __vue_options__.options
+}
+
+__vue_options__.render = __vue_template__.render
+__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+
+module.exports = __vue_exports__
+
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+var __vue_exports__, __vue_options__
+var __vue_styles__ = {}
+
+/* styles */
+__webpack_require__(15)
+
+/* script */
+__vue_exports__ = __webpack_require__(27)
+
+/* template */
+var __vue_template__ = __webpack_require__(32)
+__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+if (
+  typeof __vue_exports__.default === "object" ||
+  typeof __vue_exports__.default === "function"
+) {
+__vue_options__ = __vue_exports__ = __vue_exports__.default
+}
+if (typeof __vue_options__ === "function") {
+  __vue_options__ = __vue_options__.options
+}
+
+__vue_options__.render = __vue_template__.render
+__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+
+module.exports = __vue_exports__
+
+
+/***/ },
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Player_vue__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Player_vue__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Player_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__components_Player_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__components_SongList_vue__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__store_store__ = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -630,6 +801,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+
+
 
 
 
@@ -640,22 +821,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
     components:{
         SearchBox: __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue___default.a,
         Player: __WEBPACK_IMPORTED_MODULE_1__components_Player_vue___default.a,
-        SongList: __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue___default.a
+        SongList: __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue___default.a,
+        PlayingList: __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue___default.a
     },
     
     data(){
         return {
-            title:'轻量的音乐盒子'
+            playingId:null   /* 正在播放的歌曲id */
+        }
+    },
+    methods:{
+        changePlayId:function(id){  /* 修改播放音乐的id */
+            this.playingId = id
+            console.log('song id changed to:' + id)
+        },
+        nextSong:function(){
+           let index = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
+               return p.songid == this.playingId
+           });               
+           if(index >=0){
+               /* 是不是最后一首歌曲 */
+               this.playingId =  (index == __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.length - 1) ? __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[0].songid:__WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[index+1].songid
+           }
         }
     }
 };
 
 
 /***/ },
-/* 18 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(4);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -690,20 +888,103 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
-//
-//
+
+
+   
+let playerC = document.querySelector('player') 
+
 
 /* harmony default export */ exports["default"] = {
-    name:'player'
+    name:'player',
+    props:['playingId'],
+    data(){
+        return {
+            url:null
+        }
+    },
+    computed:{
+        songId(){
+            return this.playingId
+        }
+    },
+    methods:
+    {
+        ended:function(ev){
+            console.log('ended song')
+            this.$emit('playNextSong',null)
+        }
+    },
+    watch:{
+        async songId(to,from){
+            console.log('player got new songid:' + to)
+            if(to !== from){
+                let detail = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].songDetail(to)
+                player.src = '/api/song?fileLink=' + detail.bitrate['file_link']
+                player.play()
+            }
+        }
+    }
 };
 
 
-
 /***/ },
-/* 19 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(0);
+Object.defineProperty(exports, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+/* harmony default export */ exports["default"] = {
+    name:'playing-list',
+    props:["pid"],
+    data(){
+        return {
+           list: __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].cache.playingList
+        }
+    },       
+    methods:{
+        changeId:function(ev){
+            let el = ev.target               
+            if(el.getAttribute("data-id") != null){
+                this.$emit('changePlayId',el.getAttribute("data-id"))
+            }
+        }
+    },
+    computed:{
+        pclass(){
+            return 
+        }
+    }
+
+};
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__apiProxy__ = __webpack_require__(4);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -733,24 +1014,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 
+
+
+
+
 /* harmony default export */ exports["default"] = {
   name: 'search-box',  
-  data () {
-    return {     
+  data() {
+    return {
+        keyWords:'海'
     }
   },
   computed: {   
   },
   methods: {   
+     search:async function(ev){
+         console.log('execute searching')
+         let datas = await __WEBPACK_IMPORTED_MODULE_1__apiProxy__["a" /* default */].search(this.keyWords)      
+         __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].state.songs.splice(0,__WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].state.songs.length,...(datas.song||[]))
+      }
   }
 };
 
 
 /***/ },
-/* 20 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -777,20 +1069,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
+//
+
+
 
 /* harmony default export */ exports["default"] = {
     name:'song',
-    props:['song']        
+    props:['song'],
+    methods:{
+        addSong:function(ev){
+            __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].addSong(this.song)
+        }
+    }        
 };
 
 
 /***/ },
-/* 21 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__Song_vue__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__store_store__ = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -837,6 +1138,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 
+
+
+
+console.log(__WEBPACK_IMPORTED_MODULE_1__store_store__["a" /* default */].state.songs)
 
 /* harmony default export */ exports["default"] = {
     name:'song-list',
@@ -844,21 +1149,311 @@ Object.defineProperty(exports, "__esModule", { value: true });
         Song: __WEBPACK_IMPORTED_MODULE_0__Song_vue___default.a
     },
     data(){
-         return {
-            loading: false,  
-            songs:[{
-               title:'海阔天空',
-               artist:'beyond',
-               album:'海阔天空'
-            }]            
+        return{
+            songs: __WEBPACK_IMPORTED_MODULE_1__store_store__["a" /* default */].state.songs
         }
-    }
+    },
+    methods:{
+        changeId:function(ev){
+            let el = ev.target
+            if(el.getAttribute("data-id") != null){
+                this.$emit('changePlayId',el.getAttribute("data-id"))
+            }
+        }
+    }        
 };
 
 
 
 /***/ },
-/* 22 */
+/* 28 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "ui-widget-content ui-reelList-row emptyHeart even",
+    staticStyle: {
+      "top": "0px"
+    },
+    attrs: {
+      "reellist-row": "0"
+    }
+  }, [_c('div', {
+    staticClass: "ui-reelList-cell  c0"
+  }, [_vm._m(0), _c('span', {
+    staticClass: "listening-icon"
+  }), _c('span', {
+    staticClass: "similar-icon cur-similar"
+  }), _c('span', {
+    staticClass: "ui-reelList-songname"
+  }, [_c('span', {
+    staticClass: "songname-txt"
+  }, [_vm._v(_vm._s(_vm.song.songname))])])]), _c('div', {
+    staticClass: "ui-reelList-cell  c1"
+  }, [_c('a', {
+    staticClass: "a-link"
+  }, [_vm._v(_vm._s(_vm.song.artistname))])]), _c('div', {
+    staticClass: "ui-reelList-cell  c2"
+  }, [_vm._v("《"), _c('a', {
+    staticClass: "a-link"
+  }, [_vm._v(_vm._s(_vm.song.album))]), _vm._v("》")]), _c('div', {
+    staticClass: "ui-reelList-cell  c3",
+    staticStyle: {
+      "width": "auto"
+    }
+  }, [_c('span', {
+    attrs: {
+      "data-id": _vm.song.songid
+    },
+    on: {
+      "click": _vm.addSong
+    }
+  }, [_vm._v("+")]), _c('span', {
+    attrs: {
+      "data-id": _vm.song.songid
+    }
+  }, [_vm._v(">>")])])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "ui-reelList-checkbox"
+  }, [_c('span')])
+}]}
+
+/***/ },
+/* 29 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "mb-layout-hd cmb-comm",
+    attrs: {
+      "alog-alias": "mbox-header",
+      "monkey": "mbox-header"
+    }
+  }, [_c('div', {
+    staticClass: "top-banner"
+  }, [_c('div', {
+    staticStyle: {
+      "left": "556px"
+    },
+    attrs: {
+      "id": "searchBar"
+    }
+  }, [_c('div', {
+    attrs: {
+      "action": "search"
+    }
+  }, [_c('span', {
+    staticClass: "ui-watermark-container ui-watermark-input"
+  }, [_c('input', {
+    directives: [{
+      name: "model",
+      rawName: "v-model",
+      value: (_vm.keyWords),
+      expression: "keyWords"
+    }],
+    staticClass: "sug-input",
+    attrs: {
+      "type": "text",
+      "placeholder": "输入歌曲、歌手、专辑名",
+      "size": "24",
+      "autocomplete": "off",
+      "name": "key",
+      "id": "search-sug-input"
+    },
+    domProps: {
+      "value": _vm._s(_vm.keyWords)
+    },
+    on: {
+      "keyup": function($event) {
+        if (_vm._k($event.keyCode, "enter", 13)) { return; }
+        _vm.search($event)
+      },
+      "input": function($event) {
+        if ($event.target.composing) { return; }
+        _vm.keyWords = $event.target.value
+      }
+    }
+  })]), _c('input', {
+    attrs: {
+      "type": "button",
+      "id": "search-sug-submit",
+      "value": ""
+    },
+    on: {
+      "click": _vm.search
+    }
+  }), _vm._m(0)])])])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "sug-result",
+    staticStyle: {
+      "display": "none"
+    }
+  }, [_c('p', {
+    staticClass: "sug-source sug-quku"
+  }, [_vm._v("曲库搜索")]), _c('dl', {
+    staticClass: "sug-artist clearfix"
+  }, [_c('dt', {
+    staticClass: "sug-title clearfix"
+  }, [_vm._v("歌手")])]), _c('dl', {
+    staticClass: "sug-song clearfix"
+  }, [_c('dt', {
+    staticClass: "sug-title clearfix"
+  }, [_vm._v("歌曲")])]), _c('dl', {
+    staticClass: "sug-album clearfix"
+  }, [_c('dt', {
+    staticClass: "sug-title clearfix"
+  }, [_vm._v("专辑")])])])
+}]}
+
+/***/ },
+/* 30 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', [_c('search-box'), _c('div', {
+    staticClass: "default-main",
+    attrs: {
+      "id": "mainContent"
+    }
+  }, [_c('div', {
+    staticClass: "main-wrapper"
+  }, [_c('div', {
+    staticClass: "mb-layout-bd column1",
+    attrs: {
+      "id": "leftCol"
+    }
+  }, [_c('div', {
+    staticClass: "leftbar-bottom-bg"
+  }, [_c('div', {
+    staticClass: "leftbar-outer"
+  }, [_c('div', {
+    staticClass: "leftbar"
+  }, [_c('playing-list', {
+    attrs: {
+      "pid": _vm.playingId
+    },
+    on: {
+      "changePlayId": _vm.changePlayId
+    }
+  })])])])]), _c('div', {
+    staticClass: "mb-layout-bd column2"
+  }, [_c('div', {
+    staticClass: "tab-main ui-tabs ui-widget ui-widget-content ui-corner-all",
+    attrs: {
+      "id": "tab"
+    }
+  }, [_c('div', {
+    staticClass: "tab-content cfix"
+  }, [_c('song-list', {
+    on: {
+      "changePlayId": _vm.changePlayId
+    }
+  })])])])]), _c('div', {
+    attrs: {
+      "id": "tPlayingId"
+    }
+  }, [_vm._v(_vm._s(_vm.playingId))])]), _c('player', {
+    attrs: {
+      "playingId": _vm.playingId
+    },
+    on: {
+      "playNextSong": _vm.nextSong
+    }
+  })])
+},staticRenderFns: []}
+
+/***/ },
+/* 31 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "mb-layout-ft minwidth",
+    attrs: {
+      "onselectstart": "return false;",
+      "alog-alias": "mbox-play-ctrl",
+      "monkey": "mbox-play-ctrl"
+    }
+  }, [_c('div', {
+    staticClass: "panel",
+    attrs: {
+      "id": "playPanel"
+    }
+  }, [_c('div', {
+    staticClass: "panel-inner"
+  }, [_vm._m(0), _c('div', {
+    staticClass: "main-panel"
+  }, [_c('div', {
+    staticClass: "pane"
+  }, [_c('audio', {
+    attrs: {
+      "id": "player",
+      "controls": "",
+      "data-id": _vm.playingId
+    },
+    on: {
+      "ended": _vm.ended
+    }
+  })])]), _vm._m(1)])])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "left-panel",
+    attrs: {
+      "id": "leftPanel"
+    }
+  }, [_c('ul', {
+    staticClass: "play-btn"
+  }, [_c('li', {
+    staticClass: "prev"
+  }, [_c('a', {
+    staticClass: "wg-button",
+    attrs: {
+      "hidefocus": "true",
+      "title": "上一首[←]"
+    }
+  }, [_c('span', {
+    staticClass: "wg-button-inner"
+  })])]), _c('li', {
+    staticClass: "play wg-button",
+    attrs: {
+      "title": "暂停"
+    }
+  }, [_c('span', {
+    staticClass: "wg-button-inner"
+  }, [_c('a', {
+    attrs: {
+      "hidefocus": "true"
+    }
+  })])]), _c('li', {
+    staticClass: "next"
+  }, [_c('a', {
+    staticClass: "wg-button",
+    attrs: {
+      "hidefocus": "true",
+      "title": "下一首[→]"
+    }
+  }, [_c('span', {
+    staticClass: "wg-button-inner"
+  })])])])])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "right-panel"
+  }, [_c('a', {
+    staticClass: "switch-fm-btn",
+    attrs: {
+      "href": "javascript:;",
+      "id": "switchFm",
+      "title": "随便听听"
+    }
+  }, [_c('i', {
+    staticClass: "icon-ting"
+  }), _c('span', [_vm._v("随心听")])])])
+}]}
+
+/***/ },
+/* 32 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -870,7 +1465,10 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
   }, [_vm._m(0), _c('div', {
     staticClass: "ui-reelList-viewport"
   }, [_c('div', {
-    staticClass: "ui-reelList-canvas"
+    staticClass: "ui-reelList-canvas",
+    on: {
+      "click": _vm.changeId
+    }
   }, _vm._l((_vm.songs), function(item) {
     return _c('song', {
       key: item.id,
@@ -990,226 +1588,61 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 23 */
+/* 33 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _vm._m(0)
+  return _c('div', [_vm._m(0), _c('div', {
+    staticClass: "playingList"
+  }, [_c('ul', {
+    on: {
+      "click": _vm.changeId
+    }
+  }, _vm._l((_vm.list), function(item) {
+    return _c('li', {
+      key: item.songid,
+      staticClass: "ui-lrc-sentence ui-lrc-prev",
+      attrs: {
+        "data-id": item.songid
+      }
+    }, [_c('a', {
+      class: ['text', item.songid == _vm.pid ? 'playingItem' : ''],
+      attrs: {
+        "data-id": item.songid
+      }
+    }, [_vm._v(_vm._s(item.songname))])])
+  }))])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('div', {
-    staticClass: "mb-layout-ft minwidth",
+    staticClass: "list list-temp ui-droppable playing",
     attrs: {
-      "onselectstart": "return false;",
-      "alog-alias": "mbox-play-ctrl",
-      "monkey": "mbox-play-ctrl"
+      "id": "list_temp"
     }
-  }, [_c('div', {
-    staticClass: "panel",
-    attrs: {
-      "id": "playPanel"
-    }
-  }, [_c('div', {
-    staticClass: "panel-inner"
-  }, [_c('div', {
-    staticClass: "left-panel",
-    attrs: {
-      "id": "leftPanel"
-    }
-  }, [_c('ul', {
-    staticClass: "play-btn"
-  }, [_c('li', {
-    staticClass: "prev"
   }, [_c('a', {
-    staticClass: "wg-button",
-    attrs: {
-      "hidefocus": "true",
-      "title": "上一首[←]"
-    }
-  }, [_c('span', {
-    staticClass: "wg-button-inner"
-  })])]), _c('li', {
-    staticClass: "play wg-button",
-    attrs: {
-      "title": "暂停"
-    }
-  }, [_c('span', {
-    staticClass: "wg-button-inner"
-  }, [_c('a', {
+    staticClass: "icon column1-icon list-temp-icon",
     attrs: {
       "hidefocus": "true"
     }
-  })])]), _c('li', {
-    staticClass: "next"
-  }, [_c('a', {
-    staticClass: "wg-button",
+  }), _c('a', {
+    staticClass: "text"
+  }, [_vm._v("收藏列表")]), _c('a', {
+    staticClass: "column1-icon listening-icon listen-icon-playing",
     attrs: {
-      "hidefocus": "true",
-      "title": "下一首[→]"
+      "hidefocus": "true"
     }
-  }, [_c('span', {
-    staticClass: "wg-button-inner"
-  })])])])]), _c('div', {
-    staticClass: "main-panel"
-  }, [_c('div', {
-    staticClass: "pane"
-  }, [_c('audio', {
-    attrs: {
-      "id": "player",
-      "controls": ""
-    }
-  })])]), _c('div', {
-    staticClass: "right-panel"
-  }, [_c('a', {
-    staticClass: "switch-fm-btn",
-    attrs: {
-      "href": "javascript:;",
-      "id": "switchFm",
-      "title": "随便听听"
-    }
-  }, [_c('i', {
-    staticClass: "icon-ting"
-  }), _c('span', [_vm._v("随心听")])])])])])])
+  })])
 }]}
 
 /***/ },
-/* 24 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "ui-widget-content ui-reelList-row emptyHeart even",
-    staticStyle: {
-      "top": "0px"
-    },
-    attrs: {
-      "reellist-row": "0"
-    }
-  }, [_c('div', {
-    staticClass: "ui-reelList-cell  c0"
-  }, [_vm._m(0), _c('span', {
-    staticClass: "listening-icon"
-  }), _c('span', {
-    staticClass: "similar-icon cur-similar"
-  }), _c('span', {
-    staticClass: "ui-reelList-songname"
-  }, [_c('span', {
-    staticClass: "songname-txt"
-  }, [_vm._v(_vm._s(_vm.song.title))])])]), _c('div', {
-    staticClass: "ui-reelList-cell  c1"
-  }, [_c('a', {
-    staticClass: "a-link"
-  }, [_vm._v(_vm._s(_vm.song.artist))])]), _c('div', {
-    staticClass: "ui-reelList-cell  c2"
-  }, [_vm._v("《"), _c('a', {
-    staticClass: "a-link"
-  }, [_vm._v(_vm._s(_vm.song.album))]), _vm._v("》")])])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "ui-reelList-checkbox"
-  }, [_c('span')])
-}]}
-
-/***/ },
-/* 25 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', [_c('search-box'), _c('div', {
-    staticClass: "default-main",
-    attrs: {
-      "id": "mainContent"
-    }
-  }, [_c('div', {
-    staticClass: "main-wrapper"
-  }, [_c('div', {
-    staticClass: "mb-layout-bd column2"
-  }, [_c('div', {
-    staticClass: "tab-main ui-tabs ui-widget ui-widget-content ui-corner-all",
-    attrs: {
-      "id": "tab"
-    }
-  }, [_c('div', {
-    staticClass: "tab-content cfix"
-  }, [_c('song-list')])])])])]), _c('player')])
-},staticRenderFns: []}
-
-/***/ },
-/* 26 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _vm._m(0)
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "mb-layout-hd cmb-comm",
-    attrs: {
-      "alog-alias": "mbox-header",
-      "monkey": "mbox-header"
-    }
-  }, [_c('div', {
-    staticClass: "top-banner"
-  }, [_c('div', {
-    staticStyle: {
-      "left": "556px"
-    },
-    attrs: {
-      "id": "searchBar"
-    }
-  }, [_c('div', {
-    attrs: {
-      "action": "search"
-    }
-  }, [_c('span', {
-    staticClass: "ui-watermark-container ui-watermark-input"
-  }, [_c('input', {
-    staticClass: "sug-input",
-    attrs: {
-      "type": "text",
-      "placeholder": "输入歌曲、歌手、专辑名",
-      "size": "24",
-      "autocomplete": "off",
-      "name": "key",
-      "id": "search-sug-input"
-    }
-  })]), _c('input', {
-    attrs: {
-      "type": "submit",
-      "id": "search-sug-submit",
-      "value": ""
-    }
-  }), _c('div', {
-    staticClass: "sug-result",
-    staticStyle: {
-      "display": "none"
-    }
-  }, [_c('p', {
-    staticClass: "sug-source sug-quku"
-  }, [_vm._v("曲库搜索")]), _c('dl', {
-    staticClass: "sug-artist clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("歌手")])]), _c('dl', {
-    staticClass: "sug-song clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("歌曲")])]), _c('dl', {
-    staticClass: "sug-album clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("专辑")])])])])])])])
-}]}
-
-/***/ },
-/* 27 */,
-/* 28 */
+/* 34 */,
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__App_vue__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__App_vue__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__App_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__App_vue__);
-
 
 
 
@@ -1221,8 +1654,7 @@ const app = new __WEBPACK_IMPORTED_MODULE_0_vue___default.a(__WEBPACK_IMPORTED_M
 
 app.$mount('#app')
 
-console.log('dsdsdss')
 
 /***/ }
-],[28]);
+],[35]);
 //# sourceMappingURL=app.js.map

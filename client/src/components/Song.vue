@@ -7,13 +7,14 @@
             <span class="listening-icon"></span>
             <span class="similar-icon cur-similar"></span>
             <span class="ui-reelList-songname">
-                <span class="songname-txt">{{song.title}}</span>
+                <span class="songname-txt">{{song.songname}}</span>
             </span>
         </div>
         <div class="ui-reelList-cell  c1">
-            <a class="a-link">{{song.artist}}</a>
+            <a class="a-link">{{song.artistname}}</a>
         </div>
         <div class="ui-reelList-cell  c2">《<a class="a-link">{{song.album}}</a>》</div>
+        <div class="ui-reelList-cell  c3" style="width:auto"><span :data-id="song.songid" @click="addSong">+</span><span :data-id="song.songid">>></span></div>
     </div>
 
     <div class="ui-reelList-viewport">
@@ -24,9 +25,16 @@
 </template>
 
 <script>
+    import store from '../store/store'
+
     export default {
         name:'song',
-        props:['song']        
+        props:['song'],
+        methods:{
+            addSong:function(ev){
+                store.addSong(this.song)
+            }
+        }        
     }
 </script>
 
@@ -34,6 +42,6 @@
     .ui-reelList-cell{
         position:relative;
         display: inline-block;
-        width: 28%;
+        width: 26%;
     }
 </style>
