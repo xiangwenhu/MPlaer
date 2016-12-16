@@ -1,4 +1,8 @@
 import apiProxy from '../apiProxy'
+import localCacheProxy from './localCache'
+
+
+const MPLAYER_PL = '_MPlayer_PlayingList_'
 
 const defaultState = {
     loading:false, /* 是否loading */
@@ -16,9 +20,12 @@ const localCache = {
         songid:'268425156'
     },{
         songname:'火星人来过',
-        songid:'278860063'
+        songid:'278860063'  
     }]
 }
+
+localCache.playingList = localCacheProxy.getCache(MPLAYER_PL) || []
+
 
 export default {    
     state:defaultState,   
@@ -44,6 +51,7 @@ export default {
              this.cache.playingList.push(songs)
             }
         }
+        localCacheProxy.setCache(MPLAYER_PL,this.cache.playingList)
     },
     deleteSong(id){
         let index = this.cache.playingList.findIndex(value=>{
@@ -51,9 +59,11 @@ export default {
         })
         if(index>0){
             this.cache.playingList.splice(index,1)
-        }        
+        } 
+        localCacheProxy.setCache(MPLAYER_PL,this.cache.playingList)       
     },
     clearSongs(){
         this.cache.playingList.splice(0, this.cache.playingList.length)
+        localCacheProxy.setCache(MPLAYER_PL,this.cache.playingList)
     }
 }
