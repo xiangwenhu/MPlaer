@@ -7,8 +7,9 @@
         </div>
         <div class="playingList">
             <ul @click="changeId">
-                <li class="ui-lrc-sentence ui-lrc-prev" v-for="item in list" :key="item.songid" :data-id="item.songid">
+                <li class="ui-lrc-sentence ui-lrc-prev" v-for="item in list" :key="item.songid" :data-id="item.songid" @mouseenter.stop="msenter" @mouseleave.stop="msleave">
                     <a :class="['text', item.songid == pid ? 'playingItem' : '']" :data-id="item.songid">{{item.songname}}</a>
+                    <a :class="['song-item','hide']" @click.stop="removeSong" :data-id="item.songid" href="javascript:void(0)">x</a>
                 </li>
             </ul>
         </div>
@@ -22,7 +23,7 @@
         props:["pid"],
         data(){
             return {
-               list: store.cache.playingList
+               'list': store.cache.playingList               
             }
         },       
         methods:{
@@ -31,6 +32,22 @@
                 if(el.getAttribute("data-id") != null){
                     this.$emit('changePlayId',el.getAttribute("data-id"))
                 }
+            },
+            removeSong(ev){
+                let el = ev.target
+                if(el.getAttribute('data-id') != null){
+                    store.removeSong(el.getAttribute('data-id'))
+                }
+            },
+            msenter(ev){
+                let classList = ev.currentTarget.querySelector('.song-item').classList
+                classList.add('show')
+                classList.remove('hide')
+            },
+            msleave(ev){
+                let classList = ev.currentTarget.querySelector('.song-item').classList
+                classList.add('hide')
+                classList.remove('show')
             }
         },
         computed:{
@@ -55,4 +72,19 @@
     .playingItem {
         background-color: rgba(68, 141, 119, 0.24);
     }
+
+    .playingList .song-item{
+        float: right;
+        position: absolute;
+        right: 30px;
+    }
+
+    .hide{
+        display: none
+    }
+
+    .show{
+        display: 'inline-block'
+    }
+
 </style>

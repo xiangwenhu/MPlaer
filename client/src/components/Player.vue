@@ -4,20 +4,25 @@
             <div class="panel-inner">
                 <div class="left-panel" id="leftPanel">
                     <ul class="play-btn">
-                        <li class="prev">
-                            <a class="wg-button" hidefocus="true" title="上一首[←]"><span class="wg-button-inner"></span></a>
+                        <li class="prev" @click="pre">
+                            <a class="wg-button" hidefocus="true" title="上一首[←]">
+                                <span class="wg-button-inner"></span>
+                            </a>
                         </li>
-                        <li class="play wg-button" title="暂停"><span class="wg-button-inner">
+                        <li :class="['play wg-button',paused ? 'stop':'']" title="暂停" @click="outerPlay">
+                            <span class="wg-button-inner">
                             <a class="" hidefocus="true"></a>
                         </span></li>
-                        <li class="next">
-                            <a class="wg-button" hidefocus="true" title="下一首[→]"><span class="wg-button-inner"></span></a>
+                        <li class="next" @click="next">
+                            <a class="wg-button" hidefocus="true" title="下一首[→]">
+                                <span class="wg-button-inner"></span>
+                            </a>
                         </li>
                     </ul>
                 </div>
                 <div class="main-panel">
                     <div class="pane">
-                        <audio id="player" controls :data-id="playingId" @ended="ended"> </audio>
+                        <audio id="player" controls :data-id="playingId" @ended="ended" @pause="togglePlay" @play="togglePlay"> </audio>
                     </div>
                 </div>
                 <div class="right-panel">
@@ -33,28 +38,43 @@
 
 <script>
 
-    import apiProxy from '../apiProxy'   
-    let playerC = document.querySelector('player') 
- 
+    import apiProxy from '../apiProxy'      
 
     export default {
         name:'player',
         props:['playingId'],
         data(){
             return {
-                url:null
+                url:null,
+                paused:true               
             }
         },
         computed:{
             songId(){
                 return this.playingId
-            }
+            }                      
         },
         methods:
         {
-            ended:function(ev){
+            ended:function(){
                 console.log('ended song')
-                this.$emit('playNextSong',null)
+                this.$emit('playNextSong')
+            }, 
+            pre:function(){
+                this.$emit('playPreSong')
+            },
+            next:function(){
+                this.$emit('playNextSong')
+            },
+            togglePlay:function(){               
+                this.paused = player.paused                
+            },
+            outerPlay:function(){ 
+                if(!this.playingId){
+                    return
+                }            
+                player.paused? player.play():player.pause()
+                this.paused = player.paused 
             }
         },
         watch:{

@@ -24,7 +24,7 @@ const localCache = {
     }]
 }
 
-localCache.playingList = localCacheProxy.getCache(MPLAYER_PL) || []
+localCache.playingList = localCacheProxy.getCache(MPLAYER_PL) || localCache.playingList
 
 
 export default {    
@@ -45,19 +45,15 @@ export default {
             /* 同样可以push */
             this.cache.playingList.splice(0,0,...songs)
         }else{
-            if(this.cache.playingList.findIndex(s=>{
-                return s.songid == songs.songid
-            }) < 0){
+            if(this.cache.playingList.findIndex(s=>s.songid == songs.songid) < 0){
              this.cache.playingList.push(songs)
             }
         }
         localCacheProxy.setCache(MPLAYER_PL,this.cache.playingList)
     },
-    deleteSong(id){
-        let index = this.cache.playingList.findIndex(value=>{
-            value.id === id
-        })
-        if(index>0){
+    removeSong(id){
+        let index = this.cache.playingList.findIndex(value=> value.songid === id)
+        if(index>=0){
             this.cache.playingList.splice(index,1)
         } 
         localCacheProxy.setCache(MPLAYER_PL,this.cache.playingList)       

@@ -25,7 +25,7 @@
             <div id="tPlayingId">{{playingId}}</div>   
         </div>
 
-        <player :playingId="playingId" v-on:playNextSong="nextSong"></player>
+        <player :playingId="playingId" v-on:playNextSong="nextSong" v-on:playPreSong="preSong"></player>
     </div>
 </template>
 
@@ -62,6 +62,20 @@
                if(index >=0){
                    /* 是不是最后一首歌曲 */
                    this.playingId =  (index == store.cache.playingList.length - 1) ? store.cache.playingList[0].songid:store.cache.playingList[index+1].songid
+               }else{
+                   this.playingId = store.cache.playingList[0].songid
+               }
+            },
+            preSong:function(){
+              let index = store.cache.playingList.findIndex(p=>{
+                   return p.songid == this.playingId
+               });               
+               if(index >=0){
+                   /* 是不是第一首歌曲 */
+                   let len = store.cache.playingList.length
+                   this.playingId =  (index == 0) ? store.cache.playingList[len-1].songid:store.cache.playingList[index-1].songid
+               }else{
+                    this.playingId = store.cache.playingList[0].songid
                }
             }
         }

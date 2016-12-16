@@ -31,7 +31,7 @@ const localCache = {
     }]
 }
 
-localCache.playingList = __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].getCache(MPLAYER_PL) || []
+localCache.playingList = __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].getCache(MPLAYER_PL) || localCache.playingList
 
 
 /* harmony default export */ exports["a"] = {    
@@ -52,19 +52,15 @@ localCache.playingList = __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* defaul
             /* 同样可以push */
             this.cache.playingList.splice(0,0,...songs)
         }else{
-            if(this.cache.playingList.findIndex(s=>{
-                return s.songid == songs.songid
-            }) < 0){
+            if(this.cache.playingList.findIndex(s=>s.songid == songs.songid) < 0){
              this.cache.playingList.push(songs)
             }
         }
         __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
     },
-    deleteSong(id){
-        let index = this.cache.playingList.findIndex(value=>{
-            value.id === id
-        })
-        if(index>0){
+    removeSong(id){
+        let index = this.cache.playingList.findIndex(value=> value.songid === id)
+        if(index>=0){
             this.cache.playingList.splice(index,1)
         } 
         __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)       
@@ -497,7 +493,7 @@ exports = module.exports = __webpack_require__(1)();
 
 
 // module
-exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30px}.playingList .text{color:inherit}.playingItem{background-color:rgba(68,141,119,.24)}", ""]);
+exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30px}.playingList .text{color:inherit}.playingItem{background-color:rgba(68,141,119,.24)}.playingList .song-item{float:right;position:absolute;right:30px}.hide{display:none}.show{display:\"inline-block\"}", ""]);
 
 // exports
 
@@ -868,6 +864,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
            if(index >=0){
                /* 是不是最后一首歌曲 */
                this.playingId =  (index == __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.length - 1) ? __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[0].songid:__WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[index+1].songid
+           }else{
+               this.playingId = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[0].songid
+           }
+        },
+        preSong:function(){
+          let index = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
+               return p.songid == this.playingId
+           });               
+           if(index >=0){
+               /* 是不是第一首歌曲 */
+               let len = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.length
+               this.playingId =  (index == 0) ? __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[len-1].songid:__WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[index-1].songid
+           }else{
+                this.playingId = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[0].songid
            }
         }
     }
@@ -914,30 +924,50 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
 
 
-   
-let playerC = document.querySelector('player') 
-
+      
 
 /* harmony default export */ exports["default"] = {
     name:'player',
     props:['playingId'],
     data(){
         return {
-            url:null
+            url:null,
+            paused:true               
         }
     },
     computed:{
         songId(){
             return this.playingId
-        }
+        }                      
     },
     methods:
     {
-        ended:function(ev){
+        ended:function(){
             console.log('ended song')
-            this.$emit('playNextSong',null)
+            this.$emit('playNextSong')
+        }, 
+        pre:function(){
+            this.$emit('playPreSong')
+        },
+        next:function(){
+            this.$emit('playNextSong')
+        },
+        togglePlay:function(){               
+            this.paused = player.paused                
+        },
+        outerPlay:function(){ 
+            if(!this.playingId){
+                return
+            }            
+            player.paused? player.play():player.pause()
+            this.paused = player.paused 
         }
     },
     watch:{
@@ -977,6 +1007,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
+//
 
 
 /* harmony default export */ exports["default"] = {
@@ -984,7 +1015,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     props:["pid"],
     data(){
         return {
-           list: __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].cache.playingList
+           'list': __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].cache.playingList               
         }
     },       
     methods:{
@@ -993,6 +1024,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
             if(el.getAttribute("data-id") != null){
                 this.$emit('changePlayId',el.getAttribute("data-id"))
             }
+        },
+        removeSong(ev){
+            let el = ev.target
+            if(el.getAttribute('data-id') != null){
+                __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].removeSong(el.getAttribute('data-id'))
+            }
+        },
+        msenter(ev){
+            let classList = ev.currentTarget.querySelector('.song-item').classList
+            classList.add('show')
+            classList.remove('hide')
+        },
+        msleave(ev){
+            let classList = ev.currentTarget.querySelector('.song-item').classList
+            classList.add('hide')
+            classList.remove('show')
         }
     },
     computed:{
@@ -1388,7 +1435,8 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "playingId": _vm.playingId
     },
     on: {
-      "playNextSong": _vm.nextSong
+      "playNextSong": _vm.nextSong,
+      "playPreSong": _vm.preSong
     }
   })])
 },staticRenderFns: []}
@@ -1412,7 +1460,32 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   }, [_c('div', {
     staticClass: "panel-inner"
-  }, [_vm._m(0), _c('div', {
+  }, [_c('div', {
+    staticClass: "left-panel",
+    attrs: {
+      "id": "leftPanel"
+    }
+  }, [_c('ul', {
+    staticClass: "play-btn"
+  }, [_c('li', {
+    staticClass: "prev",
+    on: {
+      "click": _vm.pre
+    }
+  }, [_vm._m(0)]), _c('li', {
+    class: ['play wg-button', _vm.paused ? 'stop' : ''],
+    attrs: {
+      "title": "暂停"
+    },
+    on: {
+      "click": _vm.outerPlay
+    }
+  }, [_vm._m(1)]), _c('li', {
+    staticClass: "next",
+    on: {
+      "click": _vm.next
+    }
+  }, [_vm._m(2)])])]), _c('div', {
     staticClass: "main-panel"
   }, [_c('div', {
     staticClass: "pane"
@@ -1423,20 +1496,13 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "data-id": _vm.playingId
     },
     on: {
-      "ended": _vm.ended
+      "ended": _vm.ended,
+      "pause": _vm.togglePlay,
+      "play": _vm.togglePlay
     }
-  })])]), _vm._m(1)])])])
+  })])]), _vm._m(3)])])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "left-panel",
-    attrs: {
-      "id": "leftPanel"
-    }
-  }, [_c('ul', {
-    staticClass: "play-btn"
-  }, [_c('li', {
-    staticClass: "prev"
-  }, [_c('a', {
+  return _c('a', {
     staticClass: "wg-button",
     attrs: {
       "hidefocus": "true",
@@ -1444,20 +1510,17 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   }, [_c('span', {
     staticClass: "wg-button-inner"
-  })])]), _c('li', {
-    staticClass: "play wg-button",
-    attrs: {
-      "title": "暂停"
-    }
-  }, [_c('span', {
+  })])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('span', {
     staticClass: "wg-button-inner"
   }, [_c('a', {
     attrs: {
       "hidefocus": "true"
     }
-  })])]), _c('li', {
-    staticClass: "next"
-  }, [_c('a', {
+  })])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('a', {
     staticClass: "wg-button",
     attrs: {
       "hidefocus": "true",
@@ -1465,7 +1528,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   }, [_c('span', {
     staticClass: "wg-button-inner"
-  })])])])])
+  })])
 },function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('div', {
     staticClass: "right-panel"
@@ -1640,13 +1703,35 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       staticClass: "ui-lrc-sentence ui-lrc-prev",
       attrs: {
         "data-id": item.songid
+      },
+      on: {
+        "mouseenter": function($event) {
+          $event.stopPropagation();
+          _vm.msenter($event)
+        },
+        "mouseleave": function($event) {
+          $event.stopPropagation();
+          _vm.msleave($event)
+        }
       }
     }, [_c('a', {
       class: ['text', item.songid == _vm.pid ? 'playingItem' : ''],
       attrs: {
         "data-id": item.songid
       }
-    }, [_vm._v(_vm._s(item.songname))])])
+    }, [_vm._v(_vm._s(item.songname))]), _c('a', {
+      class: ['song-item', 'hide'],
+      attrs: {
+        "data-id": item.songid,
+        "href": "javascript:void(0)"
+      },
+      on: {
+        "click": function($event) {
+          $event.stopPropagation();
+          _vm.removeSong($event)
+        }
+      }
+    }, [_vm._v("x")])])
   }))])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('div', {
