@@ -31,9 +31,12 @@
             </div>
         </div>
         <div class="ui-reelList-viewport">
-            <div class="ui-reelList-canvas" @click="changeId">
+            <div v-if="songs.length > 0" class="ui-reelList-canvas" @click="changeId">
                 <song v-for="item in songs" :key="item.id" :song="item">
                 </song>
+            </div>
+            <div v-else style="text-align: center;margin:20px 0">
+                <div class="text">没有数据</div>
             </div>
         </div>
     </div>
