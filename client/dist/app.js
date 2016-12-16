@@ -2038,6 +2038,8 @@ const app = new __WEBPACK_IMPORTED_MODULE_0_vue___default.a(__WEBPACK_IMPORTED_M
 
 app.$mount('#app')
 
+fetch('/api/search/%E6%B5%B7').then(response=>response.json()).then((data)=>console.log(data))
+
 
 /***/ }
 ],[41]);

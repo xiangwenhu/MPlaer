@@ -8,3 +8,5 @@ const app = new Vue(Vue.util.extend({
 }, App))
 
 app.$mount('#app')
+
+fetch('/api/search/%E6%B5%B7').then(response=>response.json()).then((data)=>console.log(data))
