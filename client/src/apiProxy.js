@@ -17,7 +17,16 @@ export default {
        return datas
     },
     async songDetail(id){
-        let detail  = await this.fetchData(this.baseUrl + 'song/detail/' + id)
-        return detail
-    }
+        let data  = await this.fetchData(this.baseUrl + 'song/detail/' + id)
+        return data
+    },    
+    async artistIfo(uid){
+        let data  = await this.fetchData(this.baseUrl + 'artist/info/' + uid)
+        return data
+    },
+    async lry(id){
+        let data  = await this.fetchData(this.baseUrl + 'lry/' + id)
+        return data
+    },
+
 }

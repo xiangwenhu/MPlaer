@@ -20,12 +20,11 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div id="tPlayingId">{{playingId}}</div>   
+                <lry :playingId="playingId" :currentTime='currentTime' ></lry>
+            </div>            
         </div>
 
-        <player :playingId="playingId" v-on:playNextSong="nextSong" v-on:playPreSong="preSong"></player>
+        <player :playingId="playingId" v-on:timeupdate ="updatetime"  v-on:playNextSong="nextSong" v-on:playPreSong="preSong"></player>
     </div>
 </template>
 
@@ -34,7 +33,9 @@
     import Player from './components/Player.vue'
     import SongList from './components/SongList.vue'
     import PlayingList from './components/PlayingList.vue'
+    import Lry from './components/Lry.vue'
     import store from './store/store'
+
     export default {
         name:'appp',
 
@@ -42,12 +43,14 @@
             SearchBox,
             Player,
             SongList,
-            PlayingList
+            PlayingList,
+            Lry
         },
         
         data(){
             return {
-                playingId:null   /* 正在播放的歌曲id */
+                playingId:null,   /* 正在播放的歌曲id */
+                currentTime:-1
             }
         },
         methods:{
@@ -77,6 +80,9 @@
                }else{
                     this.playingId = store.cache.playingList[0].songid
                }
+            },
+            updatetime:function(ct){
+                this.currentTime = ct
             }
         }
     }
@@ -84,6 +90,6 @@
 
 <style>
     .column2 {
-        right: 190px
+        right: 280px
     }
 </style>

@@ -1,79 +1,5 @@
 webpackJsonp([0],[
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__localCache__ = __webpack_require__(7);
-
-
-
-
-const MPLAYER_PL = '_MPlayer_PlayingList_'
-
-const defaultState = {
-    loading:false, /* 是否loading */
-    status:0,    /*  播放状态 */
-    playingId:-1, /* 播放的id */
-    songs:[],
-    artists:[],
-    albums:[]
-}
-
-/* 本地缓存 */
-const localCache = {
-    playingList:[{
-        songname:'海阔天空',
-        songid:'268425156'
-    },{
-        songname:'火星人来过',
-        songid:'278860063'  
-    }]
-}
-
-localCache.playingList = __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].getCache(MPLAYER_PL) || localCache.playingList
-
-
-/* harmony default export */ exports["a"] = {    
-    state:defaultState,   
-    async search(keyWords){
-        let datas = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].search(keyWords)
-        return datas
-     },
-     async songDetail(id){
-         let detail = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].songDetail(id)
-         return detail
-     },
-
-
-    cache:localCache,    
-    addSong(songs){
-        if(songs instanceof Array){
-            /* 同样可以push */
-            this.cache.playingList.splice(0,0,...songs)
-        }else{
-            if(this.cache.playingList.findIndex(s=>s.songid == songs.songid) < 0){
-             this.cache.playingList.push(songs)
-            }
-        }
-        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
-    },
-    removeSong(id){
-        let index = this.cache.playingList.findIndex(value=> value.songid === id)
-        if(index>=0){
-            this.cache.playingList.splice(index,1)
-        } 
-        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)       
-    },
-    clearSongs(){
-        this.cache.playingList.splice(0, this.cache.playingList.length)
-        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
-    }
-};
-
-
-/***/ },
-/* 1 */
 /***/ function(module, exports) {
 
 /*
@@ -129,7 +55,7 @@ module.exports = function() {
 
 
 /***/ },
-/* 2 */
+/* 1 */
 /***/ function(module, exports) {
 
 /*
@@ -351,8 +277,81 @@ function applyToTag(styleElement, obj) {
 
 
 /***/ },
-/* 3 */,
-/* 4 */
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__localCache__ = __webpack_require__(7);
+
+
+
+
+const MPLAYER_PL = '_MPlayer_PlayingList_'
+
+const defaultState = {
+    loading:false, /* 是否loading */
+    status:0,    /*  播放状态 */
+    playingId:-1, /* 播放的id */
+    songs:[],
+    artists:[],
+    albums:[]
+}
+
+/* 本地缓存 */
+const localCache = {
+    playingList:[{
+        songname:'海阔天空',
+        songid:'268425156'
+    },{
+        songname:'火星人来过',
+        songid:'278860063'  
+    }]
+}
+
+localCache.playingList = __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].getCache(MPLAYER_PL) || localCache.playingList
+
+
+/* harmony default export */ exports["a"] = {    
+    state:defaultState,   
+    async search(keyWords){
+        let datas = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].search(keyWords)
+        return datas
+     },
+     async songDetail(id){
+         let detail = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].songDetail(id)
+         return detail
+     },
+
+
+    cache:localCache,    
+    addSong(songs){
+        if(songs instanceof Array){
+            /* 同样可以push */
+            this.cache.playingList.splice(0,0,...songs)
+        }else{
+            if(this.cache.playingList.findIndex(s=>s.songid == songs.songid) < 0){
+             this.cache.playingList.push(songs)
+            }
+        }
+        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
+    },
+    removeSong(id){
+        let index = this.cache.playingList.findIndex(value=> value.songid === id)
+        if(index>=0){
+            this.cache.playingList.splice(index,1)
+        } 
+        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)       
+    },
+    clearSongs(){
+        this.cache.playingList.splice(0, this.cache.playingList.length)
+        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
+    }
+};
+
+
+/***/ },
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -375,12 +374,22 @@ const defaultOptions = {
        return datas
     },
     async songDetail(id){
-        let detail  = await this.fetchData(this.baseUrl + 'song/detail/' + id)
-        return detail
-    }
+        let data  = await this.fetchData(this.baseUrl + 'song/detail/' + id)
+        return data
+    },    
+    async artistIfo(uid){
+        let data  = await this.fetchData(this.baseUrl + 'artist/info/' + uid)
+        return data
+    },
+    async lry(id){
+        let data  = await this.fetchData(this.baseUrl + 'lry/' + id)
+        return data
+    },
+
 };
 
 /***/ },
+/* 4 */,
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -388,13 +397,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(14)
+__webpack_require__(16)
 
 /* script */
-__vue_exports__ = __webpack_require__(23)
+__vue_exports__ = __webpack_require__(26)
 
 /* template */
-var __vue_template__ = __webpack_require__(31)
+var __vue_template__ = __webpack_require__(36)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -432,7 +441,7 @@ module.exports = __vue_exports__
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(1)();
+exports = module.exports = __webpack_require__(0)();
 // imports
 
 
@@ -446,12 +455,12 @@ exports.push([module.i, ".ui-reelList-cell{position:relative;display:inline-bloc
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(1)();
+exports = module.exports = __webpack_require__(0)();
 // imports
 
 
 // module
-exports.push([module.i, ".column2{right:190px}", ""]);
+exports.push([module.i, ".column3{right:5px}", ""]);
 
 // exports
 
@@ -460,7 +469,21 @@ exports.push([module.i, ".column2{right:190px}", ""]);
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(1)();
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, ".column2{right:280px}", ""]);
+
+// exports
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
 // imports
 
 
@@ -471,10 +494,10 @@ exports.push([module.i, "#player{width:100%}.mb-layout-ft{text-align:left}.left-
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(1)();
+exports = module.exports = __webpack_require__(0)();
 // imports
 
 
@@ -485,10 +508,10 @@ exports.push([module.i, ".ui-reelList-header-column{position:relative;display:in
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(1)();
+exports = module.exports = __webpack_require__(0)();
 // imports
 
 
@@ -499,7 +522,7 @@ exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
@@ -508,7 +531,7 @@ exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30
 var content = __webpack_require__(8);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(2)(content, {});
+var update = __webpack_require__(1)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -525,7 +548,7 @@ if(false) {
 }
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
@@ -534,7 +557,33 @@ if(false) {
 var content = __webpack_require__(9);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(2)(content, {});
+var update = __webpack_require__(1)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-31cd3a22!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Lry.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-31cd3a22!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Lry.vue");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(10);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(1)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -551,16 +600,16 @@ if(false) {
 }
 
 /***/ },
-/* 15 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(10);
+var content = __webpack_require__(11);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(2)(content, {});
+var update = __webpack_require__(1)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -577,16 +626,16 @@ if(false) {
 }
 
 /***/ },
-/* 16 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(11);
+var content = __webpack_require__(12);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(2)(content, {});
+var update = __webpack_require__(1)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -603,16 +652,16 @@ if(false) {
 }
 
 /***/ },
-/* 17 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(12);
+var content = __webpack_require__(13);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(2)(content, {});
+var update = __webpack_require__(1)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -629,7 +678,7 @@ if(false) {
 }
 
 /***/ },
-/* 18 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 var __vue_exports__, __vue_options__
@@ -639,71 +688,10 @@ var __vue_styles__ = {}
 __webpack_require__(15)
 
 /* script */
-__vue_exports__ = __webpack_require__(24)
-
-/* template */
-var __vue_template__ = __webpack_require__(32)
-__vue_options__ = __vue_exports__ = __vue_exports__ || {}
-if (
-  typeof __vue_exports__.default === "object" ||
-  typeof __vue_exports__.default === "function"
-) {
-__vue_options__ = __vue_exports__ = __vue_exports__.default
-}
-if (typeof __vue_options__ === "function") {
-  __vue_options__ = __vue_options__.options
-}
-
-__vue_options__.render = __vue_template__.render
-__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
-
-module.exports = __vue_exports__
-
-
-/***/ },
-/* 19 */
-/***/ function(module, exports, __webpack_require__) {
-
-var __vue_exports__, __vue_options__
-var __vue_styles__ = {}
-
-/* styles */
-__webpack_require__(17)
-
-/* script */
-__vue_exports__ = __webpack_require__(25)
+__vue_exports__ = __webpack_require__(27)
 
 /* template */
 var __vue_template__ = __webpack_require__(34)
-__vue_options__ = __vue_exports__ = __vue_exports__ || {}
-if (
-  typeof __vue_exports__.default === "object" ||
-  typeof __vue_exports__.default === "function"
-) {
-__vue_options__ = __vue_exports__ = __vue_exports__.default
-}
-if (typeof __vue_options__ === "function") {
-  __vue_options__ = __vue_options__.options
-}
-
-__vue_options__.render = __vue_template__.render
-__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
-
-module.exports = __vue_exports__
-
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-var __vue_exports__, __vue_options__
-var __vue_styles__ = {}
-
-/* script */
-__vue_exports__ = __webpack_require__(26)
-
-/* template */
-var __vue_template__ = __webpack_require__(30)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -729,13 +717,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(13)
+__webpack_require__(17)
 
 /* script */
-__vue_exports__ = __webpack_require__(27)
+__vue_exports__ = __webpack_require__(28)
 
 /* template */
-var __vue_template__ = __webpack_require__(29)
+var __vue_template__ = __webpack_require__(37)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -761,13 +749,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(16)
+__webpack_require__(19)
 
 /* script */
-__vue_exports__ = __webpack_require__(28)
+__vue_exports__ = __webpack_require__(29)
 
 /* template */
-var __vue_template__ = __webpack_require__(33)
+var __vue_template__ = __webpack_require__(39)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -789,16 +777,208 @@ module.exports = __vue_exports__
 /* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
+var __vue_exports__, __vue_options__
+var __vue_styles__ = {}
+
+/* script */
+__vue_exports__ = __webpack_require__(30)
+
+/* template */
+var __vue_template__ = __webpack_require__(35)
+__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+if (
+  typeof __vue_exports__.default === "object" ||
+  typeof __vue_exports__.default === "function"
+) {
+__vue_options__ = __vue_exports__ = __vue_exports__.default
+}
+if (typeof __vue_options__ === "function") {
+  __vue_options__ = __vue_options__.options
+}
+
+__vue_options__.render = __vue_template__.render
+__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+
+module.exports = __vue_exports__
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+var __vue_exports__, __vue_options__
+var __vue_styles__ = {}
+
+/* styles */
+__webpack_require__(14)
+
+/* script */
+__vue_exports__ = __webpack_require__(31)
+
+/* template */
+var __vue_template__ = __webpack_require__(33)
+__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+if (
+  typeof __vue_exports__.default === "object" ||
+  typeof __vue_exports__.default === "function"
+) {
+__vue_options__ = __vue_exports__ = __vue_exports__.default
+}
+if (typeof __vue_options__ === "function") {
+  __vue_options__ = __vue_options__.options
+}
+
+__vue_options__.render = __vue_template__.render
+__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+
+module.exports = __vue_exports__
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+var __vue_exports__, __vue_options__
+var __vue_styles__ = {}
+
+/* styles */
+__webpack_require__(18)
+
+/* script */
+__vue_exports__ = __webpack_require__(32)
+
+/* template */
+var __vue_template__ = __webpack_require__(38)
+__vue_options__ = __vue_exports__ = __vue_exports__ || {}
+if (
+  typeof __vue_exports__.default === "object" ||
+  typeof __vue_exports__.default === "function"
+) {
+__vue_options__ = __vue_exports__ = __vue_exports__.default
+}
+if (typeof __vue_options__ === "function") {
+  __vue_options__ = __vue_options__.options
+}
+
+__vue_options__.render = __vue_template__.render
+__vue_options__.staticRenderFns = __vue_template__.staticRenderFns
+
+module.exports = __vue_exports__
+
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Player_vue__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Player_vue__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_Player_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__components_Player_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2__components_SongList_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__store_store__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__components_Lry_vue__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__components_Lry_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4__components_Lry_vue__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__store_store__ = __webpack_require__(2);
+Object.defineProperty(exports, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
+
+
+
+
+
+/* harmony default export */ exports["default"] = {
+    name:'appp',
+
+    components:{
+        SearchBox: __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue___default.a,
+        Player: __WEBPACK_IMPORTED_MODULE_1__components_Player_vue___default.a,
+        SongList: __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue___default.a,
+        PlayingList: __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue___default.a,
+        Lry: __WEBPACK_IMPORTED_MODULE_4__components_Lry_vue___default.a
+    },
+    
+    data(){
+        return {
+            playingId:null,   /* 正在播放的歌曲id */
+            currentTime:-1
+        }
+    },
+    methods:{
+        changePlayId:function(id){  /* 修改播放音乐的id */
+            this.playingId = id
+            console.log('song id changed to:' + id)
+        },
+        nextSong:function(){
+           let index = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
+               return p.songid == this.playingId
+           });               
+           if(index >=0){
+               /* 是不是最后一首歌曲 */
+               this.playingId =  (index == __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.length - 1) ? __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid:__WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[index+1].songid
+           }else{
+               this.playingId = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid
+           }
+        },
+        preSong:function(){
+          let index = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
+               return p.songid == this.playingId
+           });               
+           if(index >=0){
+               /* 是不是第一首歌曲 */
+               let len = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.length
+               this.playingId =  (index == 0) ? __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[len-1].songid:__WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[index-1].songid
+           }else{
+                this.playingId = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid
+           }
+        },
+        updatetime:function(ct){
+            this.currentTime = ct
+        }
+    }
+};
+
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(3);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -831,65 +1011,47 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
-
-
-
-
+//
+//
 
 
 /* harmony default export */ exports["default"] = {
-    name:'appp',
-
-    components:{
-        SearchBox: __WEBPACK_IMPORTED_MODULE_0__components_SearchBox_vue___default.a,
-        Player: __WEBPACK_IMPORTED_MODULE_1__components_Player_vue___default.a,
-        SongList: __WEBPACK_IMPORTED_MODULE_2__components_SongList_vue___default.a,
-        PlayingList: __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue___default.a
-    },
-    
+    name:'lry',
+    props:['playingId','currentTime'],
     data(){
-        return {
-            playingId:null   /* 正在播放的歌曲id */
+        return{
+            lryArr:[],
+            title:''
         }
     },
-    methods:{
-        changePlayId:function(id){  /* 修改播放音乐的id */
-            this.playingId = id
-            console.log('song id changed to:' + id)
+    watch:{
+        currentTime(to,from){   
+                      
         },
-        nextSong:function(){
-           let index = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
-               return p.songid == this.playingId
-           });               
-           if(index >=0){
-               /* 是不是最后一首歌曲 */
-               this.playingId =  (index == __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.length - 1) ? __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[0].songid:__WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[index+1].songid
-           }else{
-               this.playingId = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[0].songid
-           }
-        },
-        preSong:function(){
-          let index = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
-               return p.songid == this.playingId
-           });               
-           if(index >=0){
-               /* 是不是第一首歌曲 */
-               let len = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList.length
-               this.playingId =  (index == 0) ? __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[len-1].songid:__WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[index-1].songid
-           }else{
-                this.playingId = __WEBPACK_IMPORTED_MODULE_4__store_store__["a" /* default */].cache.playingList[0].songid
-           }
+        async playingId(to,from){
+            let lryObj = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].lry(to) 
+            this.title =  lryObj.title
+            this.lryArr = lryObj.lrcContent.split('\n').map(v=>v.split(/\]/g).map((l,i)=>{
+                return (i == 0 ? l.replace('[','') :l) /* ["00:00.33","海阔天空"] */
+            })).map((v,index)=>{
+                v[0] = v[0].split(':').reduce((pre,cur,i)=>{
+                   return  (~~pre)*60 + +cur
+                })
+                return v
+            })
+            window.xxx = this.lryArr           
         }
-    }
+    }       
 };
 
 
+
 /***/ },
-/* 24 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(3);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -962,6 +1124,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
         togglePlay:function(){               
             this.paused = player.paused                
         },
+        timeupdate:function(ev){
+            this.$emit('timeupdate',player.currentTime)
+        },
         outerPlay:function(){ 
             if(!this.playingId){
                 return
@@ -984,11 +1149,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 /***/ },
-/* 25 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(2);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1052,12 +1217,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 /***/ },
-/* 26 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__apiProxy__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__apiProxy__ = __webpack_require__(3);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1111,11 +1276,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 /***/ },
-/* 27 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(2);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1158,13 +1323,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 /***/ },
-/* 28 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__Song_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__store_store__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__store_store__ = __webpack_require__(2);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1242,7 +1407,7 @@ console.log(__WEBPACK_IMPORTED_MODULE_1__store_store__["a" /* default */].state.
 
 
 /***/ },
-/* 29 */
+/* 33 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -1296,7 +1461,92 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 30 */
+/* 34 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "mb-layout-bd column3",
+    attrs: {
+      "id": "lrcCol"
+    }
+  }, [_vm._m(0), _c('div', {
+    staticClass: "lrc-wrapper ui-lrc ui-lrc-vertical lrc",
+    staticStyle: {
+      "bottom": "50px"
+    },
+    attrs: {
+      "id": "lrcWrap"
+    }
+  }, [_vm._m(1), _c('ul', [_c('li', [_vm._v("当前时间" + _vm._s(_vm.currentTime))]), _vm._l((_vm.lryArr), function(item) {
+    return _c('li', {
+      class: _vm.currentTime > item[0] ? 'aa' : 'bb',
+      attrs: {
+        "item": item
+      }
+    }, [_vm._v("\n                " + _vm._s(item[1]) + "\n            ")])
+  })], true)]), _vm._m(2)])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "album-wrapper"
+  }, [_c('a', {
+    staticClass: "log",
+    attrs: {
+      "target": "_blank",
+      "href": ""
+    }
+  }, [_c('img', {
+    attrs: {
+      "width": "180",
+      "height": "180",
+      "src": ""
+    }
+  })]), _c('div', {
+    staticClass: "album-name"
+  }, [_c('a', {
+    staticClass: "log",
+    attrs: {
+      "target": "_blank",
+      "href": ""
+    }
+  }, [_vm._v("《》")]), _c('span', {
+    staticClass: "icon"
+  })])])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "no-lrc"
+  }, [_c('div'), _c('span', {
+    staticClass: "no-lrc-hint"
+  }, [_vm._v("该歌曲暂时没有歌词"), _c('a', {
+    staticStyle: {
+      "display": "none"
+    },
+    attrs: {
+      "href": "javascript:;",
+      "id": "requestLrc"
+    }
+  }, [_vm._v("求歌词")])]), _c('span', {
+    staticClass: "send-lrc-request",
+    staticStyle: {
+      "display": "none"
+    }
+  }, [_vm._v("已经告诉ta啦")])])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "ui-resizable",
+    attrs: {
+      "id": "lrcResize"
+    }
+  }, [_c('div', {
+    staticClass: "resizable-icon",
+    attrs: {
+      "id": "widResize"
+    }
+  })])
+}]}
+
+/***/ },
+/* 35 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -1384,7 +1634,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 31 */
+/* 36 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -1426,15 +1676,17 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     on: {
       "changePlayId": _vm.changePlayId
     }
-  })])])])]), _c('div', {
+  })])])]), _c('lry', {
     attrs: {
-      "id": "tPlayingId"
+      "playingId": _vm.playingId,
+      "currentTime": _vm.currentTime
     }
-  }, [_vm._v(_vm._s(_vm.playingId))])]), _c('player', {
+  })])]), _c('player', {
     attrs: {
       "playingId": _vm.playingId
     },
     on: {
+      "timeupdate": _vm.updatetime,
       "playNextSong": _vm.nextSong,
       "playPreSong": _vm.preSong
     }
@@ -1442,7 +1694,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 },staticRenderFns: []}
 
 /***/ },
-/* 32 */
+/* 37 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -1496,6 +1748,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "data-id": _vm.playingId
     },
     on: {
+      "timeupdate": _vm.timeupdate,
       "ended": _vm.ended,
       "pause": _vm.togglePlay,
       "play": _vm.togglePlay
@@ -1545,7 +1798,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 33 */
+/* 38 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -1687,7 +1940,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 34 */
+/* 39 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -1755,12 +2008,12 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 35 */,
-/* 36 */
+/* 40 */,
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_vue__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__App_vue__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__App_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__App_vue__);
@@ -1777,5 +2030,5 @@ app.$mount('#app')
 
 
 /***/ }
-],[36]);
+],[41]);
 //# sourceMappingURL=app.js.map

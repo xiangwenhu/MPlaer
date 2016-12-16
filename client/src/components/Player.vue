@@ -22,7 +22,7 @@
                 </div>
                 <div class="main-panel">
                     <div class="pane">
-                        <audio id="player" controls :data-id="playingId" @ended="ended" @pause="togglePlay" @play="togglePlay"> </audio>
+                        <audio id="player" controls :data-id="playingId" @timeupdate="timeupdate" @ended="ended" @pause="togglePlay" @play="togglePlay"> </audio>
                     </div>
                 </div>
                 <div class="right-panel">
@@ -68,6 +68,9 @@
             },
             togglePlay:function(){               
                 this.paused = player.paused                
+            },
+            timeupdate:function(ev){
+                this.$emit('timeupdate',player.currentTime)
             },
             outerPlay:function(){ 
                 if(!this.playingId){

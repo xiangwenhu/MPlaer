@@ -17,8 +17,16 @@ router.get('/search/:keyWords', async (ctx)=>{
 })
 //歌曲详情
 .get('/song/detail/:id',async(ctx)=>{
-    let detail = await apiProxy.songDetail(ctx.params.id)
-    ctx.body = detail
+    let data = await apiProxy.songDetail(ctx.params.id)
+    ctx.body = data
+})
+.get('/artist/info/:uid',async(ctx)=>{
+    let data = await apiProxy.artistInfo(ctx.params.uid)
+    ctx.body = data
+})
+.get('/lry/:id',async(ctx)=>{
+    let data = await apiProxy.lry(ctx.params.id)
+    ctx.body = data
 })
 
 module.exports = router
