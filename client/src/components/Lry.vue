@@ -11,18 +11,19 @@
         </div>
 
         <div class="lrc-wrapper ui-lrc ui-lrc-vertical lrc" id="lrcWrap" style="bottom: 50px;">
-            <div class="no-lrc">
-                <div></div>
-                <span class="no-lrc-hint">该歌曲暂时没有歌词<a href="javascript:;" style="display:none;" id="requestLrc">求歌词</a>
-                </span>
-                <span class="send-lrc-request" style="display:none;">已经告诉ta啦</span>
-            </div>
-            <ul>
+
+            <ul v-if="(lryArr||[]).length>0">
                 <li>当前时间{{currentTime}}</li>
-                <li v-for="item in lryArr" :item="item" :class="currentTime > item[0]? 'aa':'bb'">
+                <li v-for="(item,index) in lryArr" :item="item" :class="currentIndex == index ? 'light':''" :data-index="'index-' + index">
                     {{item[1]}}
                 </li>
             </ul>
+            <div v-else class="no-lrc">
+                <div></div>
+                <span class="no-lrc-hint">该歌曲暂时没有歌词<a href="javascript:;" id="requestLrc">求歌词</a>
+                </span>
+                <span class="send-lrc-request">已经告诉ta啦</span>
+            </div>
         </div>
 
         <div class="ui-resizable" id="lrcResize">
@@ -39,14 +40,31 @@
         data(){
             return{
                 lryArr:[],
-                title:''
+                title:'',              
+                currentIndex:-1
             }
         },
         watch:{
             currentTime(to,from){   
-                          
+                let i = this.lryArr.findIndex(v=>v[0]>to)   
+                if(i<0){
+                    return
+                }
+                if(!(i == 0 || i == this.lryArr.length - 1)){ /* 不是开头和结尾 */
+                    i = i - 1
+                }
+                if(i != this.currentIndex ){                              
+                    this.currentIndex = i   
+                    let cEl = lrcWrap.querySelector('[data-index="index-' + i + '"]');
+                    if(cEl !=null){ 
+                        let offsetHeight = lrcWrap.offsetHeight,
+                            offsetTop = cEl.offsetTop 
+                        lrcWrap.scrollTop = offsetTop > offsetHeight ? offsetTop - offsetHeight/2.0 : offsetTop/2.0
+                    }
+                }  
             },
             async playingId(to,from){
+                lrcWrap.scrollTop = 0
                 let lryObj = await apiProxy.lry(to) 
                 this.title =  lryObj.title
                 this.lryArr = lryObj.lrcContent.split('\n').map(v=>v.split(/\]/g).map((l,i)=>{
@@ -56,8 +74,7 @@
                        return  (~~pre)*60 + +cur
                     })
                     return v
-                })
-                window.xxx = this.lryArr           
+                })                                        
             }
         }       
     }
@@ -67,5 +84,9 @@
 <style>
     .column3 {
         right:5px
+    }
+    .light{
+        color:red;
+        font-size: 15px;
     }
 </style>
