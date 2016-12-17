@@ -2,20 +2,19 @@
     <div class="mb-layout-bd column3" id="lrcCol">
         <div class="album-wrapper">
             <a target="_blank" class="log" href="">
-                <img width="180" height="180" src="">
+                <img width="180" height="180" :src="songDetails ? songDetails.songinfo.pic_big :'//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'">
             </a>
             <div class="album-name">
-                <a target="_blank" class="log" href="">《》</a>
+                <a target="_blank" class="log" href="javascript:void(0)">{{songDetails? songDetails.songinfo.author:''}}</a>
                 <span class="icon"></span>
             </div>
         </div>
 
         <div class="lrc-wrapper ui-lrc ui-lrc-vertical lrc" id="lrcWrap" style="bottom: 50px;">
 
-            <ul v-if="(lryArr||[]).length>0">
-                <li>当前时间{{currentTime}}</li>
+            <ul v-if="(lryArr||[]).length>0">                          
                 <li v-for="(item,index) in lryArr" :item="item" :class="currentIndex == index ? 'light':''" :data-index="'index-' + index">
-                    {{item[1]}}
+                    {{item.length > 1 ? item[1]: item[0]}}
                 </li>
             </ul>
             <div v-else class="no-lrc">
@@ -36,7 +35,7 @@
     import apiProxy from '../apiProxy'
     export default {
         name:'lry',
-        props:['playingId','currentTime'],
+        props:['playingId','currentTime','songDetails'],
         data(){
             return{
                 lryArr:[],
@@ -70,9 +69,12 @@
                 this.lryArr = lryObj.lrcContent.split('\n').map(v=>v.split(/\]/g).map((l,i)=>{
                     return (i == 0 ? l.replace('[','') :l) /* ["00:00.33","海阔天空"] */
                 })).map((v,index)=>{
-                    v[0] = v[0].split(':').reduce((pre,cur,i)=>{
-                       return  (~~pre)*60 + +cur
-                    })
+                    /*  有的没有歌词进度信息 */
+                    if(v.length > 1){
+                        v[0] = v[0].split(':').reduce((pre,cur,i)=>{
+                            return  (~~pre)*60 + +cur
+                        })                        
+                    }
                     return v
                 })                                        
             }

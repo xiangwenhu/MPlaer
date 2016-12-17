@@ -430,7 +430,7 @@ module.exports = __vue_exports__
 /* harmony default export */ exports["a"] = {
     getCache(key){
         let data = localStorage.getItem(key)
-        return data !== null ? JSON.parse(data):null
+        return JSON.parse(data)
     },
     setCache(key,value){
         localStorage.setItem(key,JSON.stringify(value))
@@ -935,7 +935,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
     data(){
         return {
             playingId:null,   /* 正在播放的歌曲id */
-            currentTime:-1
+            currentTime:-1,
+            songDetails:null
         }
     },
     methods:{
@@ -968,6 +969,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
         },
         updatetime:function(ct){
             this.currentTime = ct
+        },
+        detail:function(d){
+            this.songDetails = d
         }
     }
 };
@@ -1013,12 +1017,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
-//
 
 
 /* harmony default export */ exports["default"] = {
     name:'lry',
-    props:['playingId','currentTime'],
+    props:['playingId','currentTime','songDetails'],
     data(){
         return{
             lryArr:[],
@@ -1052,9 +1055,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
             this.lryArr = lryObj.lrcContent.split('\n').map(v=>v.split(/\]/g).map((l,i)=>{
                 return (i == 0 ? l.replace('[','') :l) /* ["00:00.33","海阔天空"] */
             })).map((v,index)=>{
-                v[0] = v[0].split(':').reduce((pre,cur,i)=>{
-                   return  (~~pre)*60 + +cur
-                })
+                /*  有的没有歌词进度信息 */
+                if(v.length > 1){
+                    v[0] = v[0].split(':').reduce((pre,cur,i)=>{
+                        return  (~~pre)*60 + +cur
+                    })                        
+                }
                 return v
             })                                        
         }
@@ -1157,6 +1163,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
             console.log('player got new songid:' + to)
             if(to !== from){
                 let detail = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].songDetail(to)
+                this.$emit('songDetail',detail)
                 player.src = '/api/song?fileLink=' + detail.bitrate['file_link']
                 player.play()
             }
@@ -1397,9 +1404,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 
 
-
-
-console.log(__WEBPACK_IMPORTED_MODULE_1__store_store__["a" /* default */].state.songs)
 
 /* harmony default export */ exports["default"] = {
     name:'song-list',
@@ -1835,9 +1839,16 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "changePlayId": _vm.changePlayId
     }
   })])])]), _c('lry', {
+    directives: [{
+      name: "ref",
+      rawName: "v-ref",
+      value: (_vm.lryC),
+      expression: "lryC"
+    }],
     attrs: {
       "playingId": _vm.playingId,
-      "currentTime": _vm.currentTime
+      "currentTime": _vm.currentTime,
+      "songDetails": _vm.songDetails
     }
   })])]), _c('player', {
     attrs: {
@@ -1845,6 +1856,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     },
     on: {
       "timeupdate": _vm.updatetime,
+      "songDetail": _vm.detail,
       "playNextSong": _vm.nextSong,
       "playPreSong": _vm.preSong
     }
@@ -1949,36 +1961,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "id": "lrcCol"
     }
-  }, [_vm._m(0), _c('div', {
-    staticClass: "lrc-wrapper ui-lrc ui-lrc-vertical lrc",
-    staticStyle: {
-      "bottom": "50px"
-    },
-    attrs: {
-      "id": "lrcWrap"
-    }
-  }, [((_vm.lryArr || []).length > 0) ? _c('ul', [_c('li', [_vm._v("当前时间" + _vm._s(_vm.currentTime))]), _vm._l((_vm.lryArr), function(item, index) {
-    return _c('li', {
-      class: _vm.currentIndex == index ? 'light' : '',
-      attrs: {
-        "item": item,
-        "data-index": 'index-' + index
-      }
-    }, [_vm._v("\n                " + _vm._s(item[1]) + "\n            ")])
-  })], true) : _c('div', {
-    staticClass: "no-lrc"
-  }, [_c('div'), _c('span', {
-    staticClass: "no-lrc-hint"
-  }, [_vm._v("该歌曲暂时没有歌词"), _c('a', {
-    attrs: {
-      "href": "javascript:;",
-      "id": "requestLrc"
-    }
-  }, [_vm._v("求歌词")])]), _c('span', {
-    staticClass: "send-lrc-request"
-  }, [_vm._v("已经告诉ta啦")])])]), _vm._m(1)])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
+  }, [_c('div', {
     staticClass: "album-wrapper"
   }, [_c('a', {
     staticClass: "log",
@@ -1990,7 +1973,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "width": "180",
       "height": "180",
-      "src": ""
+      "src": _vm.songDetails ? _vm.songDetails.songinfo.pic_big : '//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'
     }
   })]), _c('div', {
     staticClass: "album-name"
@@ -1998,12 +1981,39 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "log",
     attrs: {
       "target": "_blank",
-      "href": ""
+      "href": "javascript:void(0)"
     }
-  }, [_vm._v("《》")]), _c('span', {
+  }, [_vm._v(_vm._s(_vm.songDetails ? _vm.songDetails.songinfo.author : ''))]), _c('span', {
     staticClass: "icon"
-  })])])
-},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  })])]), _c('div', {
+    staticClass: "lrc-wrapper ui-lrc ui-lrc-vertical lrc",
+    staticStyle: {
+      "bottom": "50px"
+    },
+    attrs: {
+      "id": "lrcWrap"
+    }
+  }, [((_vm.lryArr || []).length > 0) ? _c('ul', _vm._l((_vm.lryArr), function(item, index) {
+    return _c('li', {
+      class: _vm.currentIndex == index ? 'light' : '',
+      attrs: {
+        "item": item,
+        "data-index": 'index-' + index
+      }
+    }, [_vm._v("\n                " + _vm._s(item.length > 1 ? item[1] : item[0]) + "\n            ")])
+  })) : _c('div', {
+    staticClass: "no-lrc"
+  }, [_c('div'), _c('span', {
+    staticClass: "no-lrc-hint"
+  }, [_vm._v("该歌曲暂时没有歌词"), _c('a', {
+    attrs: {
+      "href": "javascript:;",
+      "id": "requestLrc"
+    }
+  }, [_vm._v("求歌词")])]), _c('span', {
+    staticClass: "send-lrc-request"
+  }, [_vm._v("已经告诉ta啦")])])]), _vm._m(0)])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('div', {
     staticClass: "ui-resizable",
     attrs: {

@@ -20,11 +20,11 @@
                         </div>
                     </div>
                 </div>
-                <lry :playingId="playingId" :currentTime='currentTime' ></lry>
+                <lry :playingId="playingId" :currentTime='currentTime' v-ref="lryC" :songDetails="songDetails"></lry>
             </div>            
         </div>
 
-        <player :playingId="playingId" v-on:timeupdate ="updatetime"  v-on:playNextSong="nextSong" v-on:playPreSong="preSong"></player>
+        <player :playingId="playingId" v-on:timeupdate ="updatetime" v-on:songDetail='detail'  v-on:playNextSong="nextSong" v-on:playPreSong="preSong"></player>
     </div>
 </template>
 
@@ -50,7 +50,8 @@
         data(){
             return {
                 playingId:null,   /* 正在播放的歌曲id */
-                currentTime:-1
+                currentTime:-1,
+                songDetails:null
             }
         },
         methods:{
@@ -83,6 +84,9 @@
             },
             updatetime:function(ct){
                 this.currentTime = ct
+            },
+            detail:function(d){
+                this.songDetails = d
             }
         }
     }

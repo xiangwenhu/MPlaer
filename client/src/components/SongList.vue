@@ -48,9 +48,6 @@
 <script>
     import Song from './Song.vue'
     import store from '../store/store'
-
-    console.log(store.state.songs)
-
     export default {
         name:'song-list',
         components:{

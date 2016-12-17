@@ -85,6 +85,7 @@
                 console.log('player got new songid:' + to)
                 if(to !== from){
                     let detail = await apiProxy.songDetail(to)
+                    this.$emit('songDetail',detail)
                     player.src = '/api/song?fileLink=' + detail.bitrate['file_link']
                     player.play()
                 }
