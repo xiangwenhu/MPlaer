@@ -90,7 +90,9 @@
             }
         },
         mounted:function(){
-            setTimeout(()=>this.playingId =  store.cache.playingList[0].songid,10)
+            setTimeout(()=>{
+                this.playingId =  store.cache.playingList[0].songid                                
+            },10)           
         } 
     }
 </script>

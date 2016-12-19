@@ -31,8 +31,8 @@
             </div>
         </div>
         <div class="ui-reelList-viewport">
-            <div v-if="songs.length > 0" class="ui-reelList-canvas" @click="changeId">
-                <song v-for="item in songs" :key="item.id" :song="item">
+            <div v-if="songs.length > 0" class="ui-reelList-canvas">
+                <song v-for="item in songs" :key="item.id" :song="item" v-on:changeId ="changeId">
                 </song>
             </div>
             <div v-else style="text-align: center;margin:20px 0">
@@ -59,11 +59,10 @@
             }
         },
         methods:{
-            changeId:function(ev){
-                let el = ev.target
-                if(el.getAttribute("data-id") != null){
-                    this.$emit('changePlayId',el.getAttribute("data-id"))
-                }
+            changeId:function(id){
+                if(id){
+                    this.$emit('changePlayId',id)
+                }                
             }
         }        
     }

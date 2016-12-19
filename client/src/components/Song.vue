@@ -14,7 +14,7 @@
             <a class="a-link">{{song.artistname}}</a>
         </div>
         <div class="ui-reelList-cell  c2">《<a class="a-link">{{song.album}}</a>》</div>
-        <div class="ui-reelList-cell  c3" style="width:auto"><span :data-id="song.songid" @click="addSong">+</span><span :data-id="song.songid">>></span></div>
+        <div class="ui-reelList-cell  c3" style="width:auto"><span :data-id="song.songid" @click.stop="addSong">+</span><span :data-id="song.songid" @click.stop="changeId" >>></span></div>
     </div>
 
     <div class="ui-reelList-viewport">
@@ -31,8 +31,11 @@
         name:'song',
         props:['song'],
         methods:{
-            addSong:function(ev){
+            addSong:function(){
                 store.addSong(this.song)
+            },
+            changeId:function(){
+                this.$emit('changeId',this.song.songid)
             }
         }        
     }

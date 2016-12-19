@@ -28,5 +28,9 @@ router.get('/search/:keyWords', async (ctx)=>{
     let data = await apiProxy.lry(ctx.params.id)
     ctx.body = data
 })
+.get('/getAll', async(ctx)=>{
+    let data = await apiProxy.getAll(ctx.query.baseUrl||null, decodeURIComponent(ctx.query.query))
+    ctx.body = data
+})
 
 module.exports = router

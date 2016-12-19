@@ -28,5 +28,9 @@ export default {
         let data  = await this.fetchData(this.baseUrl + 'lry/' + id)
         return data
     },
+    async hotSongs(){
+        let data = await this.fetchData(this.baseUrl + 'getAll?' + encodeURIComponent('from=qianqian&version=2&method=baidu.ting.billboard.billList&format=json&type=2&offset=0&size=50') )
+        return data    
+    }
 
 }

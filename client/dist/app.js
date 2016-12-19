@@ -385,6 +385,10 @@ const defaultOptions = {
         let data  = await this.fetchData(this.baseUrl + 'lry/' + id)
         return data
     },
+    async hotSongs(){
+        let data = await this.fetchData(this.baseUrl + 'getAll?' + encodeURIComponent('from=qianqian&version=2&method=baidu.ting.billboard.billList&format=json&type=2&offset=0&size=50') )
+        return data    
+    }
 
 };
 
@@ -975,7 +979,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
     },
     mounted:function(){
-        setTimeout(()=>this.playingId =  __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid,10)
+        setTimeout(()=>{
+            this.playingId =  __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid                                
+        },10)           
     } 
 };
 
@@ -1296,8 +1302,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
      search:async function(ev){
          console.log('execute searching')
          let datas = await __WEBPACK_IMPORTED_MODULE_1__apiProxy__["a" /* default */].search(this.keyWords)      
-         __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].state.songs.splice(0,__WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].state.songs.length,...(datas.song||[]))
+         __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].state.songs.splice(0,__WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].state.songs.length,...(datas.data.song||[]))
       }
+  },
+  mounted:function(){
+     
   }
 };
 
@@ -1342,8 +1351,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
     name:'song',
     props:['song'],
     methods:{
-        addSong:function(ev){
+        addSong:function(){
             __WEBPACK_IMPORTED_MODULE_0__store_store__["a" /* default */].addSong(this.song)
+        },
+        changeId:function(){
+            this.$emit('changeId',this.song.songid)
         }
     }        
 };
@@ -1419,11 +1431,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
         }
     },
     methods:{
-        changeId:function(ev){
-            let el = ev.target
-            if(el.getAttribute("data-id") != null){
-                this.$emit('changePlayId',el.getAttribute("data-id"))
-            }
+        changeId:function(id){
+            if(id){
+                this.$emit('changePlayId',id)
+            }                
         }
     }        
 };
@@ -1471,11 +1482,20 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "data-id": _vm.song.songid
     },
     on: {
-      "click": _vm.addSong
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.addSong($event)
+      }
     }
   }, [_vm._v("+")]), _c('span', {
     attrs: {
       "data-id": _vm.song.songid
+    },
+    on: {
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.changeId($event)
+      }
     }
   }, [_vm._v(">>")])])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -1833,15 +1853,15 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
   }, [_vm._m(0), _c('div', {
     staticClass: "ui-reelList-viewport"
   }, [(_vm.songs.length > 0) ? _c('div', {
-    staticClass: "ui-reelList-canvas",
-    on: {
-      "click": _vm.changeId
-    }
+    staticClass: "ui-reelList-canvas"
   }, _vm._l((_vm.songs), function(item) {
     return _c('song', {
       key: item.id,
       attrs: {
         "song": item
+      },
+      on: {
+        "changeId": _vm.changeId
       }
     })
   })) : _c('div', {

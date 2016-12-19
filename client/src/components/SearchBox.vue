@@ -43,8 +43,11 @@ export default {
      search:async function(ev){
          console.log('execute searching')
          let datas = await apiProxy.search(this.keyWords)      
-         store.state.songs.splice(0,store.state.songs.length,...(datas.song||[]))
+         store.state.songs.splice(0,store.state.songs.length,...(datas.data.song||[]))
       }
+  },
+  mounted:function(){
+     
   }
 }
 </script>

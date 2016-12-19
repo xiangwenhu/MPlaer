@@ -13,7 +13,7 @@ module.exports =   {
     get  search() {
         return async function(keyWords){
             let name = decodeURI(keyWords),	
-            url = 'method=baidu.ting.search.catalogSug&query=' + encodeURI(name),
+            url = '?format=json&version=2&from=0&method=baidu.ting.search.catalogSug&query=' + encodeURI(name),
             data = await request.get(this.baseUrl + '?' +url)	
             return data
         }
@@ -58,4 +58,14 @@ module.exports =   {
             return data
         }
     },
+    get getAll(){
+        return async function(baseUrl = this.baseUrl,query){
+            console.log('baseUrl:' + (baseUrl || this.baseUrl))
+            console.log('query:' + query)
+            let fullUrl = baseUrl || this.baseUrl  +  '?' + query,
+                data = await request.get(fullUrl)	
+            return data
+        }
+    }
+
 }
