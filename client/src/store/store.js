@@ -16,11 +16,11 @@ const defaultState = {
 /* 本地缓存 */
 const localCache = {
     playingList:[{
-        songname:'海阔天空',
-        songid:'268425156'
+        songname:'恭喜发财',
+        songid:'8245250'
     },{
-        songname:'火星人来过',
-        songid:'278860063'  
+        songname:'伤了你的心的我的心好伤心',
+        songid:'580824'  
     }]
 }
 

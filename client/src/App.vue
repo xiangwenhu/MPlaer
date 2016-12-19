@@ -88,7 +88,10 @@
             detail:function(d){
                 this.songDetails = d
             }
-        }
+        },
+        mounted:function(){
+            setTimeout(()=>this.playingId =  store.cache.playingList[0].songid,10)
+        } 
     }
 </script>
 
