@@ -22,7 +22,7 @@
                 </div>
                 <div class="main-panel">
                     <div class="pane">
-                        <audio id="player" controls :data-id="playingId" @timeupdate="timeupdate" @ended="ended" @pause="togglePlay" @play="togglePlay"> </audio>
+                        <audio volume="-1" id="player" controls :data-id="playingId" @timeupdate="timeupdate" @ended="ended" @pause="togglePlay" @play="togglePlay"> </audio>
                     </div>
                 </div>
                 <div class="right-panel">
@@ -86,7 +86,10 @@
                 if(to !== from){
                     let detail = await apiProxy.songDetail(to)
                     this.$emit('songDetail',detail)
-                    player.src = '/api/song?fileLink=' + detail.bitrate['file_link']
+                    player.src = '/api/song?fileLink=' + detail.bitrate['file_link']     
+                    if(player.volume < 0){
+                        player.volume = 0.5
+                    }              
                     player.play()
                 }
             }

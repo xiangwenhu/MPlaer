@@ -48,6 +48,7 @@
 <script>
     import Song from './Song.vue'
     import store from '../store/store'
+    import apiProxy from '../apiProxy'
     export default {
         name:'song-list',
         components:{
@@ -64,6 +65,20 @@
                     this.$emit('changePlayId',id)
                 }                
             }
+        },
+        mounted:function(ev){
+            setTimeout(async ()=>{
+                 let defaultSongs  =  await apiProxy.hotSongs(),
+                    songs = (defaultSongs['song_list']||[]).map((s)=>{ 
+                        return {
+                            songid:s['song_id'],
+                            songname:s.title,
+                            artistname:s['artist_name']
+                        }
+                    })             
+
+                 store.state.songs.splice(0, store.state.songs.length,...songs)
+            },10)
         }        
     }
 
