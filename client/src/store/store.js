@@ -10,7 +10,10 @@ const defaultState = {
     playingId:-1, /* 播放的id */
     songs:[],
     artists:[],
-    albums:[]
+    albums:[],
+    channels:[],
+    hearts:[],
+    playMode:1,  /* 1 播放收藏，10 随心听，2单曲  */           
 }
 
 /* 本地缓存 */

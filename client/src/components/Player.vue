@@ -26,7 +26,7 @@
                     </div>
                 </div>
                 <div class="right-panel">
-                    <a href="javascript:;" id="switchFm" class="switch-fm-btn" title="随便听听">
+                    <a href="javascript:;" id="switchFm" class="switch-fm-btn" title="随便听听" @click="listenHearts">
                         <i class="icon-ting"></i>
                         <span>随心听</span>
                     </a>
@@ -38,7 +38,8 @@
 
 <script>
 
-    import apiProxy from '../apiProxy'      
+    import apiProxy from '../apiProxy'
+    import store from '../store/store'      
 
     export default {
         name:'player',
@@ -78,6 +79,9 @@
                 }            
                 player.paused? player.play():player.pause()
                 this.paused = player.paused 
+            },
+            listenHearts: function(){
+                this.$emit('toHearts')                      
             }
         },
         watch:{
@@ -93,7 +97,14 @@
                     player.play()
                 }
             }
+        },
+        mounted:function(){
+            setTimeout( async()=>{
+                let channels = await apiProxy.channels()
+                store.state.channels = channels.result[0].channellist
+            },15)
         }
+
     }
 </script>
 

@@ -1,5 +1,131 @@
 webpackJsonp([0],[
 /* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+const defaultOptions = {
+    headers:{
+        isFetch:1
+    }
+}
+
+/* harmony default export */ exports["a"] = {
+    baseUrl:'/api/',
+    fetchData(url,options = defaultOptions){
+        return new Promise((resolve,reject)=>{
+            fetch(url,options).then(response=>response.json())
+            .then(data=>resolve(data)).catch(err=>reject(err))
+        })
+    },
+    async search(title){
+       let datas = await this.fetchData(this.baseUrl + 'search/'+ title)
+       return datas
+    },
+    async songDetail(id){
+        let data  = await this.fetchData(this.baseUrl + 'song/detail/' + id)
+        return data
+    },    
+    async artistIfo(uid){
+        let data  = await this.fetchData(this.baseUrl + 'artist/info/' + uid)
+        return data
+    },
+    async lry(id){
+        let data  = await this.fetchData(this.baseUrl + 'lry/' + id)
+        return data
+    },
+    async hotSongs(){
+        let data = await this.fetchData(this.baseUrl + 'getAll?query=' + encodeURIComponent('from=qianqian&version=2&method=baidu.ting.billboard.billList&format=json&type=2&offset=0&size=50') )
+        return data    
+    },
+    async channels(){
+        let data = await this.fetchData(this.baseUrl + 'getAll?query=' + encodeURIComponent('from=qianqian&version=2&method=baidu.ting.radio.getCategoryList&format=json') )
+        return data    
+    },
+    async channelSongs(cname){
+        let data = await this.fetchData(this.baseUrl + 'getAll?query=' + encodeURIComponent('from=qianqian&version=2.1.0&method=baidu.ting.radio.getChannelSong&format=json&pn=0&rn=199&channelname=' + cname))
+        return data
+    }
+};
+
+/***/ },
+/* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__localCache__ = __webpack_require__(7);
+
+
+
+
+const MPLAYER_PL = '_MPlayer_PlayingList_'
+
+const defaultState = {
+    loading:false, /* 是否loading */
+    status:0,    /*  播放状态 */
+    playingId:-1, /* 播放的id */
+    songs:[],
+    artists:[],
+    albums:[],
+    channels:[],
+    hearts:[],
+    playMode:1,  /* 1 播放收藏，10 随心听，2单曲  */           
+}
+
+/* 本地缓存 */
+const localCache = {
+    playingList:[{
+        songname:'恭喜发财',
+        songid:'8245250'
+    },{
+        songname:'伤了你的心的我的心好伤心',
+        songid:'580824'  
+    }]
+}
+
+localCache.playingList = __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].getCache(MPLAYER_PL) || localCache.playingList
+
+
+/* harmony default export */ exports["a"] = {    
+    state:defaultState,   
+    async search(keyWords){
+        let datas = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].search(keyWords)
+        return datas
+     },
+     async songDetail(id){
+         let detail = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].songDetail(id)
+         return detail
+     },
+
+
+    cache:localCache,    
+    addSong(songs){
+        if(songs instanceof Array){
+            /* 同样可以push */
+            this.cache.playingList.splice(0,0,...songs)
+        }else{
+            if(this.cache.playingList.findIndex(s=>s.songid == songs.songid) < 0){
+             this.cache.playingList.push(songs)
+            }
+        }
+        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
+    },
+    removeSong(id){
+        let index = this.cache.playingList.findIndex(value=> value.songid === id)
+        if(index>=0){
+            this.cache.playingList.splice(index,1)
+        } 
+        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)       
+    },
+    clearSongs(){
+        this.cache.playingList.splice(0, this.cache.playingList.length)
+        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
+    }
+};
+
+
+/***/ },
+/* 2 */
 /***/ function(module, exports) {
 
 /*
@@ -55,7 +181,7 @@ module.exports = function() {
 
 
 /***/ },
-/* 1 */
+/* 3 */
 /***/ function(module, exports) {
 
 /*
@@ -277,122 +403,6 @@ function applyToTag(styleElement, obj) {
 
 
 /***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-const defaultOptions = {
-    headers:{
-        isFetch:1
-    }
-}
-
-/* harmony default export */ exports["a"] = {
-    baseUrl:'/api/',
-    fetchData(url,options = defaultOptions){
-        return new Promise((resolve,reject)=>{
-            fetch(url,options).then(response=>response.json())
-            .then(data=>resolve(data)).catch(err=>reject(err))
-        })
-    },
-    async search(title){
-       let datas = await this.fetchData(this.baseUrl + 'search/'+ title)
-       return datas
-    },
-    async songDetail(id){
-        let data  = await this.fetchData(this.baseUrl + 'song/detail/' + id)
-        return data
-    },    
-    async artistIfo(uid){
-        let data  = await this.fetchData(this.baseUrl + 'artist/info/' + uid)
-        return data
-    },
-    async lry(id){
-        let data  = await this.fetchData(this.baseUrl + 'lry/' + id)
-        return data
-    },
-    async hotSongs(){
-        let data = await this.fetchData(this.baseUrl + 'getAll?query=' + encodeURIComponent('from=qianqian&version=2&method=baidu.ting.billboard.billList&format=json&type=2&offset=0&size=50') )
-        return data    
-    }
-
-};
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__localCache__ = __webpack_require__(7);
-
-
-
-
-const MPLAYER_PL = '_MPlayer_PlayingList_'
-
-const defaultState = {
-    loading:false, /* 是否loading */
-    status:0,    /*  播放状态 */
-    playingId:-1, /* 播放的id */
-    songs:[],
-    artists:[],
-    albums:[]
-}
-
-/* 本地缓存 */
-const localCache = {
-    playingList:[{
-        songname:'恭喜发财',
-        songid:'8245250'
-    },{
-        songname:'伤了你的心的我的心好伤心',
-        songid:'580824'  
-    }]
-}
-
-localCache.playingList = __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].getCache(MPLAYER_PL) || localCache.playingList
-
-
-/* harmony default export */ exports["a"] = {    
-    state:defaultState,   
-    async search(keyWords){
-        let datas = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].search(keyWords)
-        return datas
-     },
-     async songDetail(id){
-         let detail = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].songDetail(id)
-         return detail
-     },
-
-
-    cache:localCache,    
-    addSong(songs){
-        if(songs instanceof Array){
-            /* 同样可以push */
-            this.cache.playingList.splice(0,0,...songs)
-        }else{
-            if(this.cache.playingList.findIndex(s=>s.songid == songs.songid) < 0){
-             this.cache.playingList.push(songs)
-            }
-        }
-        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
-    },
-    removeSong(id){
-        let index = this.cache.playingList.findIndex(value=> value.songid === id)
-        if(index>=0){
-            this.cache.playingList.splice(index,1)
-        } 
-        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)       
-    },
-    clearSongs(){
-        this.cache.playingList.splice(0, this.cache.playingList.length)
-        __WEBPACK_IMPORTED_MODULE_1__localCache__["a" /* default */].setCache(MPLAYER_PL,this.cache.playingList)
-    }
-};
-
-
-/***/ },
 /* 4 */,
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
@@ -445,7 +455,7 @@ module.exports = __vue_exports__
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(2)();
 // imports
 
 
@@ -459,7 +469,7 @@ exports.push([module.i, ".ui-reelList-header-column{position:relative;display:in
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(2)();
 // imports
 
 
@@ -473,7 +483,7 @@ exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(2)();
 // imports
 
 
@@ -487,7 +497,7 @@ exports.push([module.i, "#player{width:100%}.mb-layout-ft{text-align:left}.left-
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(2)();
 // imports
 
 
@@ -501,7 +511,7 @@ exports.push([module.i, ".ui-reelList-cell{position:relative;display:inline-bloc
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(2)();
 // imports
 
 
@@ -515,7 +525,7 @@ exports.push([module.i, ".column2{right:280px}", ""]);
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)();
+exports = module.exports = __webpack_require__(2)();
 // imports
 
 
@@ -535,7 +545,7 @@ exports.push([module.i, ".column3{right:5px}.light{color:red;font-size:15px}", "
 var content = __webpack_require__(8);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
+var update = __webpack_require__(3)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -561,7 +571,7 @@ if(false) {
 var content = __webpack_require__(9);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
+var update = __webpack_require__(3)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -587,7 +597,7 @@ if(false) {
 var content = __webpack_require__(10);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
+var update = __webpack_require__(3)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -613,7 +623,7 @@ if(false) {
 var content = __webpack_require__(11);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
+var update = __webpack_require__(3)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -639,7 +649,7 @@ if(false) {
 var content = __webpack_require__(12);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
+var update = __webpack_require__(3)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -665,7 +675,7 @@ if(false) {
 var content = __webpack_require__(13);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
+var update = __webpack_require__(3)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -885,7 +895,8 @@ module.exports = __vue_exports__
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__components_PlayingList_vue__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__components_Lry_vue__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__components_Lry_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4__components_Lry_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__store_store__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__store_store__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__apiProxy__ = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -925,6 +936,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 
+
 /* harmony default export */ exports["default"] = {
     name:'appp',
 
@@ -940,48 +952,90 @@ Object.defineProperty(exports, "__esModule", { value: true });
         return {
             playingId:null,   /* 正在播放的歌曲id */
             currentTime:-1,
-            songDetails:null
+            songDetails:null,
+            playMode:1,
+            hearts:[]
         }
     },
     methods:{
         changePlayId:function(id){  /* 修改播放音乐的id */
+            this.playMode = 1
             this.playingId = id
             console.log('song id changed to:' + id)
         },
-        nextSong:function(){
-           let index = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
-               return p.songid == this.playingId
-           });               
-           if(index >=0){
-               /* 是不是最后一首歌曲 */
-               this.playingId =  (index == __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.length - 1) ? __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid:__WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[index+1].songid
-           }else{
-               this.playingId = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid
-           }
+        nextSong:function(){               
+            if(this.playMode == 1){            
+                let index = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
+                    return p.songid == this.playingId
+                });               
+                if(index >=0){
+                    /* 是不是最后一首歌曲 */
+                    this.playingId =  (index == __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.length - 1) ? __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid:__WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[index+1].songid
+                }else{
+                    this.playingId = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid
+                }
+            }else if(this.playMode == 10){
+                let index =this.hearts.findIndex(p=>{
+                    return p.songid == this.playingId
+                });               
+                if(index >=0){
+                    /* 是不是最后一首歌曲 */
+                    this.playingId =  (index ==this.hearts.length - 1) ? this.hearts[0].songid:this.hearts[index+1].songid
+                }else{
+                    this.playingId = this.hearts[0].songid
+                }
+            }else if(this.playMode == 2) {
+                this.playingId = this.playingId
+            }
         },
         preSong:function(){
-          let index = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
-               return p.songid == this.playingId
-           });               
-           if(index >=0){
-               /* 是不是第一首歌曲 */
-               let len = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.length
-               this.playingId =  (index == 0) ? __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[len-1].songid:__WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[index-1].songid
-           }else{
-                this.playingId = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid
-           }
+            if(this.playMode == 1){
+                let index = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.findIndex(p=>{
+                    return p.songid == this.playingId
+                });               
+                if(index >=0){
+                    /* 是不是第一首歌曲 */
+                    let len = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList.length
+                    this.playingId =  (index == 0) ? __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[len-1].songid:__WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[index-1].songid
+                }else{
+                    this.playingId = __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid
+                }
+            }else if(this.playMode == 10){
+                let index = this.hearts.findIndex(p=>{
+                    return p.songid == this.playingId
+                });               
+                if(index >=0){
+                    /* 是不是第一首歌曲 */
+                    let len = this.hearts.length
+                    this.playingId =  (index == 0) ? this.hearts[len-1].songid:this.hearts[index-1].songid
+                }else{
+                    this.playingId = this.hearts[0].songid
+                }
+            }else if(this.playMode == 2) {
+                this.playingId = this.playingId
+            }
         },
         updatetime:function(ct){
             this.currentTime = ct
         },
         detail:function(d){
             this.songDetails = d
+        },
+        toHearts: async function(){
+            this.playMode = 10
+            let channel =__WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].state.channels[~~(Math.random() * __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].state.channels.length)]
+            let hearts = await __WEBPACK_IMPORTED_MODULE_6__apiProxy__["a" /* default */].channelSongs(channel['ch_name'])  
+            this.hearts= hearts.result.songlist
+            this.nextSong()
         }
     },
-    mounted:function(){
+    mounted:function(){           
         setTimeout(()=>{
-            this.playingId =  __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid                                
-        },10)           
+             /* 默认播放第一个歌曲 */
+            this.playingId =  __WEBPACK_IMPORTED_MODULE_5__store_store__["a" /* default */].cache.playingList[0].songid  
+        },10)    
+
+               
     } 
 };
 
@@ -991,7 +1045,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1083,7 +1137,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__apiProxy__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__store_store__ = __webpack_require__(1);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1123,6 +1178,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
+
 
 
       
@@ -1165,6 +1221,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
             }            
             player.paused? player.play():player.pause()
             this.paused = player.paused 
+        },
+        listenHearts: function(){
+            this.$emit('toHearts')                      
         }
     },
     watch:{
@@ -1180,7 +1239,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
                 player.play()
             }
         }
+    },
+    mounted:function(){
+        setTimeout( async()=>{
+            let channels = await __WEBPACK_IMPORTED_MODULE_0__apiProxy__["a" /* default */].channels()
+            __WEBPACK_IMPORTED_MODULE_1__store_store__["a" /* default */].state.channels = channels.result[0].channellist
+        },15)
     }
+
 };
 
 
@@ -1189,7 +1255,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(1);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1257,8 +1323,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__apiProxy__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__apiProxy__ = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1319,7 +1385,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_store__ = __webpack_require__(1);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1371,8 +1437,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Song_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__Song_vue__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__store_store__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__apiProxy__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__store_store__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__apiProxy__ = __webpack_require__(0);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -1731,7 +1797,21 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "pause": _vm.togglePlay,
       "play": _vm.togglePlay
     }
-  })])]), _vm._m(3)])])])
+  })])]), _c('div', {
+    staticClass: "right-panel"
+  }, [_c('a', {
+    staticClass: "switch-fm-btn",
+    attrs: {
+      "href": "javascript:;",
+      "id": "switchFm",
+      "title": "随便听听"
+    },
+    on: {
+      "click": _vm.listenHearts
+    }
+  }, [_c('i', {
+    staticClass: "icon-ting"
+  }), _c('span', [_vm._v("随心听")])])])])])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('a', {
     staticClass: "wg-button",
@@ -1760,19 +1840,6 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
   }, [_c('span', {
     staticClass: "wg-button-inner"
   })])
-},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "right-panel"
-  }, [_c('a', {
-    staticClass: "switch-fm-btn",
-    attrs: {
-      "href": "javascript:;",
-      "id": "switchFm",
-      "title": "随便听听"
-    }
-  }, [_c('i', {
-    staticClass: "icon-ting"
-  }), _c('span', [_vm._v("随心听")])])])
 }]}
 
 /***/ },
@@ -1898,6 +1965,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "playingId": _vm.playingId
     },
     on: {
+      "toHearts": _vm.toHearts,
       "timeupdate": _vm.updatetime,
       "songDetail": _vm.detail,
       "playNextSong": _vm.nextSong,
