@@ -8,7 +8,8 @@ module.exports = {
     app: './client/src/app.js',
     vendor: [  
       'vue',
-      'vue-router'
+      'vue-router',
+      'whatwg-fetch'
     ]
   },
   output: {
