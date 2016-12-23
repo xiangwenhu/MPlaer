@@ -43,22 +43,24 @@ app.use(async function (ctx, next) {
   ctx.set('X-Response-Time', `${ms}ms`)
 })
 
-// logger
+//logger
 app.use(async function (ctx, next) {
   const start = new Date()
   await next()
   const ms = new Date() - start
-  console.log(`${ctx.method} ${ctx.url} - ${ms}`)
+  console.log(`${ctx.method} ${ctx.url} - ${ms}`)  
 })
+
+
 
 //路由
 routes(app)
 
 //异常
 app.on('error', (err, ctx) => {
-  console.log(ctx.url)
-  console.log(err)
-  console.log(err.stack)
+  console.log('error url:' + ctx.url)
+  console.log('error detail:' + err)
+  console.log('error stack:' + err.stack)
 })
 
 
