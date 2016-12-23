@@ -22,7 +22,7 @@ module.exports =   {
     //歌曲详情
     get songDetail(){
         return async function(id){
-            let url = this.baseUrl + '?method=baidu.ting.song.playAAC&songid=' + id,
+            let url = this.baseUrl + '?method=baidu.ting.song.play&songid=' + id,
                 data = await request.get(url)	
             return data
         }
