@@ -10,16 +10,17 @@ module.exports = {
       'vue',
       'vue-router',
       'whatwg-fetch'
-    ]
+    ],
+    appWithStore:'./client_1227/src/app.js'
   },
   output: {
-    path: path.resolve(__dirname, '../client/dist'),
-    publicPath: '/dist/',
+    path: path.resolve(__dirname, '../dist'),
+    publicPath: '/',
     filename: '[name].js'
   },
   resolve: {
     alias: {
-      'public': path.resolve(__dirname, '../client/public')
+      'public': path.resolve(__dirname, '../dist')
     }
   },
   module: {

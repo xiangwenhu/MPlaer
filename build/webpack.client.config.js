@@ -20,14 +20,20 @@ const config = Object.assign({}, base, {
     }),
     // generate output HTML
     new HTMLPlugin({
-      template: 'client/src/index.html'
-    })
+      template: 'client/src/index.html',
+      chunks: ['vendor', 'app']
+    }),
+    new HTMLPlugin({
+      filename:'indexWithStore.html',
+      template: 'client_1227/src/indexWithStore.html',
+      chunks: ['vendor', 'appWithStore']
+    }),
   ])
 })
 
 if (process.env.NODE_ENV === 'production') {
 
-  config.plugins.push( 
+  config.plugins.push(
     // this is needed in webpack 2 for minifying CSS
     new webpack.LoaderOptionsPlugin({
       minimize: true
@@ -37,7 +43,7 @@ if (process.env.NODE_ENV === 'production') {
       compress: {
         warnings: false
       } 
-    }) */  
+    }) */
   )
 }
 
