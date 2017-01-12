@@ -36,40 +36,38 @@
     </div>
 </template>
 
-<script>
+<script>    
 
-
+    import {mapState} from 'vuex'
 
     export default {
-        name:'player',
-        props:['playingId'],
+        name:'player',     
         data(){
             return {
                 url:null,
                 paused:true               
             }
         },
-        computed:{
-            songId(){
-                return this.playingId
-            }                      
-        },
+        computed:mapState({
+            playingId: state => state.playingId,
+            songDetail:  state => state.songDetail
+        }),
         methods:
         {
             ended:function(){
-              
+                this.$store.dispatch('next')              
             }, 
             pre:function(){
-               
+                this.$store.dispatch('pre')  
             },
             next:function(){
-                
+                this.$store.dispatch('next')  
             },
             togglePlay:function(){               
               
             },
-            timeupdate:function(ev){
-               
+            timeupdate:function(){
+               this.$store.commit('currentTime',player.currentTime)
             },
             outerPlay:function(){ 
              
@@ -79,7 +77,12 @@
             }
         },
         watch:{
-          
+            songDetail(to,from){
+                if(to.bitrate)  {
+                    player.src = '/api/song?fileLink=' + to.bitrate['file_link']  
+                    player.play()
+                }
+          }
         },
         mounted:function(){
            

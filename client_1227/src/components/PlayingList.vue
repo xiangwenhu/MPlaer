@@ -17,33 +17,38 @@
 </template>
 
 <script> 
+
+    import {mapState,mapMutations} from 'vuex'
     export default {
-        name:'playing-list',
-        props:["pid"],
-        data(){
-            return {
-                      
-            }
-        },       
+        name:'playing-list',             
         methods:{
             changeId:function(ev){
-            
-            },
-            removeSong(ev){
-              
-            },
+                let el = ev.target               
+                if(el.getAttribute("data-id") != null){
+                    this.$store.dispatch('changeId',el.getAttribute("data-id"))
+                }
+            },           
             msenter(ev){
-               
+                let classList = ev.currentTarget.querySelector('.song-item').classList
+                classList.add('show')
+                classList.remove('hide')           
             },
             msleave(ev){
-               
+                let classList = ev.currentTarget.querySelector('.song-item').classList
+                classList.add('hide')
+                classList.remove('show')
+            },
+            removeSong:function(ev){
+                let el = ev.target
+                if(el.getAttribute('data-id') != null){
+                   this.$store.commit('removeSong',el.getAttribute('data-id'))
+                }
             }
         },
-        computed:{
-            pclass(){
-                return 
-            }
-        }
+        computed:mapState({
+            pid: state=>state.playingId,
+            list: state => state.favorites
+        }),  
 
     }
 </script>

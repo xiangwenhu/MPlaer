@@ -42,8 +42,7 @@
     import store from '../store/store'      
 
     export default {
-        name:'player',
-        props:['playingId'],
+        name:'player',      
         data(){
             return {
                 url:null,

@@ -32,10 +32,10 @@
         props:['song'],
         methods:{
             addSong:function(){
-              
+                this.$store.commit('addSong',this.song)
             },
             changeId:function(){
-              
+                this.$store.dispatch('changeId',this.song.songid)
             }
         }        
     }

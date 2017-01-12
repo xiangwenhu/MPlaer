@@ -20,29 +20,23 @@
                         </dl>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
+</div>
 </template>
 
 <script>
 
-export default {
-  name: 'search-box',  
-  data() {
-    return {
-        keyWords:'海'
+
+    import { mapState } from 'vuex'
+
+    export default {
+        name: 'search-box',   
+        methods: {
+            search: async function (ev) {
+                this.$store.dispatch('searchAsync', this.keyWords)
+                console.log(JSON.stringify(this.$store.state))
+            }
+        }        
     }
-  },
-  computed: {   
-  },
-  methods: {   
-     search:async function(ev){
-     
-      }
-  },
-  mounted:function(){
-     
-  }
-}
 </script>

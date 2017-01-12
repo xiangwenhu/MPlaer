@@ -24,7 +24,8 @@
             </div>
         </div>
 
-        <player :playingId="playingId" v-on:toHearts ="toHearts" v-on:timeupdate="updatetime" v-on:songDetail='detail' v-on:playNextSong="nextSong" v-on:playPreSong="preSong"></player>
+        <player :playingId="playingId" v-on:toHearts="toHearts" v-on:timeupdate="updatetime" v-on:songDetail='detail' v-on:playNextSong="nextSong"
+            v-on:playPreSong="preSong"></player>
     </div>
 </template>
 
@@ -37,40 +38,23 @@
 
 
     export default {
-        name:'appp',
+        name: 'appp',
 
-        components:{
+        components: {
             SearchBox,
             Player,
             SongList,
             PlayingList,
             Lry
-        },
-        
-        data(){
-            return {
-            }
-        },
-        methods:{
-            changePlayId:function(id){  /* 修改播放音乐的id */
-
-            },
-            nextSong:function(){               
-
-            },
-            updatetime:function(ct){
-              
-            },
-            detail:function(d){
+        },       
+        methods: {  
            
-            },
-            toHearts: async function(){
-
-            }
         },
-        mounted:function(){      
-                   
-        } 
+        mounted: function () {
+            if(this.$store.state.favorites){
+                this.$store.dispatch('changeId',this.$store.state.favorites[0].songid)
+            }           
+        }
     }
 </script>
 

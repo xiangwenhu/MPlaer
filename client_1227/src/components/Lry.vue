@@ -32,9 +32,10 @@
 </template>
 
 <script> 
+    import {mapState} from 'vuex'
+    import apiProxy from '../store/apiProxy' 
     export default {
-        name:'lry',
-        props:['playingId','currentTime','songDetails'],
+        name:'lry',      
         data(){
             return{
                 lryArr:[],
@@ -42,8 +43,46 @@
                 currentIndex:-1
             }
         },
+        computed:mapState([
+            'currentTime',
+            'playingId'           
+        ]),
         watch:{
-         
+            currentTime(to,from){
+             let i = this.lryArr.findIndex(v=>v[0]>to)   
+                if(i<0){
+                    return
+                }
+                if(!(i == 0 || i == this.lryArr.length - 1)){ /* 不是开头和结尾 */
+                    i = i - 1
+                }
+                if(i != this.currentIndex ){                              
+                    this.currentIndex = i   
+                    let cEl = lrcWrap.querySelector('[data-index="index-' + i + '"]');
+                    if(cEl !=null){ 
+                        let offsetHeight = lrcWrap.offsetHeight,
+                            offsetTop = cEl.offsetTop 
+                        lrcWrap.scrollTop = offsetTop > offsetHeight ? offsetTop - offsetHeight/2.0 : offsetTop/2.0
+                    }
+                }                 
+            },
+            async playingId(to){
+                lrcWrap.scrollTop = 0
+                let lryObj = await apiProxy.lry(to) 
+                this.title =  lryObj.title
+                /* 歌词单独使用，不托管store */
+                this.lryArr = lryObj.lrcContent.split('\n').map(v=>v.split(/\]/g).map((l,i)=>{
+                    return (i == 0 ? l.replace('[','') :l) /* ["00:00.33","海阔天空"] */
+                })).map((v,index)=>{
+                    /*  有的没有歌词进度信息 */
+                    if(v.length > 1){
+                        v[0] = v[0].split(':').reduce((pre,cur,i)=>{
+                            return  (~~pre)*60 + +cur
+                        })                        
+                    }
+                    return v
+                })          
+            }
         }       
     }
 
