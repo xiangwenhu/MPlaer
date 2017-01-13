@@ -1,11 +1,15 @@
 import Vue from 'vue'
 import store from './store'
 import App from './App.vue'
+import { sync } from 'vuex-router-sync'
+import router from './router'
 
-// create the app instance.
-// here we inject the router and store to all child components,
-// making them available everywhere as `this.$router` and `this.$store`.
-const app = new Vue(Vue.util.extend({ 
+// sync the router with the vuex store.
+// this registers `store.state.route`
+sync(store, router)
+
+const app = new Vue(Vue.util.extend({
+    router,
     store
 }, App))
 
