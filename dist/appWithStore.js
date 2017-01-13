@@ -1557,13 +1557,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
             this.$store.dispatch('next')  
         },
         togglePlay:function(){               
-          
+            this.paused = player.paused  
         },
         timeupdate:function(){
            this.$store.commit('currentTime',player.currentTime)
         },
         outerPlay:function(){ 
-         
+            if(!this.playingId){
+                return
+            }            
+            player.paused? player.play():player.pause()
+            this.paused = player.paused 
         },
         listenHearts: function(){
             this.$store.dispatch('toHearts')
@@ -1572,8 +1576,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
     watch:{
         songDetail(to,from){
             if(to.bitrate)  {
-                player.src = '/api/song?fileLink=' + to.bitrate['file_link']  
-                player.play()
+                setTimeout( ()=>{
+                    player.src = '/api/song?fileLink=' + to.bitrate['file_link']  
+                    player.play()
+                },50)
             }
       }
     },
