@@ -4,7 +4,7 @@
 前台 :vue2 + vuex + fetch + ES6/7 + html5(audio)<br/>
 Music Player,简约而不简单<br/>
 
-依赖百度API, <br/>
+依赖百度API, 手机上暂不能使用<br/>
 chrome 版本55以上，chrome需要开启javascript相关试验性特性 <br/>
 打开步骤，<br/>
 1）：打开chrome <br/>
