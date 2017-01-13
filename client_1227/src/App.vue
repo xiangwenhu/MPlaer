@@ -53,7 +53,8 @@
         mounted: function () {
             if(this.$store.state.favorites){
                 this.$store.dispatch('changeId',this.$store.state.favorites[0].songid)
-            }           
+            }  
+            this.$store.dispatch('channels')         
         }
     }
 </script>

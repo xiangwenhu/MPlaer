@@ -7,31 +7,37 @@ const MPLAYER_PL = '_MPlayer_PlayingList_'
 
 /* 本地缓存 */
 const localCache = {
-    playingId: null,  /*当前播放歌曲id*/   
+    playingId: null,  /*当前播放歌曲id*/
     currentTime: -1,  /*当前播放歌曲时间*/
     songDetail: null, /*当前播放歌曲详情 */
-    playMode: 1, /*  播放模式 */
+    playMode: 1, /*  播放模式   1 顺序播放， 2单曲播放， 10随心听*/
     hearts: [],  /*  随心听歌曲 */
     keyWords: '云',/* 搜索的关键字*/
     result: [],/* 搜索的结果 */
-    lyc:'', /* 歌词 */
-    favorites:[{
-        songname:'恭喜发财',
-        songid:'8245250'
-    },{
-        songname:'伤了你的心的我的心好伤心',
-        songid:'580824'  
+    markedSongs: [], /* 标记的歌曲 */
+    lyc: '', /* 歌词 */
+    channels: [], // 频道    
+    favorites: [{
+        songname: '寂寞的人伤心的歌',
+        songid: '265046969'
+    }, {
+        songname: '逆流成河',
+        songid: '106125582'
     }],
 }
 
-let state  =  Object.assign( {}, localCache ,localCacheProxy.getCache(MPLAYER_PL))
+let state = Object.assign({}, localCache, localCacheProxy.getCache(MPLAYER_PL), {
+    playingId: null,
+    markedSongs:[],
+    playMode:1
+})
 
 
 
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
-    state:state,
+    state: state,
     actions: {
         /* 搜索歌曲 */
         async searchAsync({commit}, keyWords) {
@@ -55,6 +61,19 @@ const store = new Vuex.Store({
         async songDetail({commit}, id) {
             let detail = await apiProxy.songDetail(id)
             commit('songDetail', detail)
+        },
+        /*   */
+        async channels({state}) {
+            let channels = await apiProxy.channels()
+            state.channels = channels.result[0].channellist
+        },
+        /* 随心听 */
+        async toHearts({dispatch, commit, state}) {
+            let channel = state.channels[~~(Math.random() * state.channels.length)]
+            let hearts = await apiProxy.channelSongs(channel['ch_name'])
+            state.hearts = hearts.result.songlist
+            commit('changeMode', 10)
+            dispatch('next')
         },
         /* 更换当前播放的id */
         changeId({commit, dispatch}, id) {
@@ -93,9 +112,19 @@ const store = new Vuex.Store({
             state.songDetail = detail
         },
         /*  添加歌曲到收藏 */
-        addSong(state, song) {
-            state.favorites.push(song)
-            localCacheProxy.setCache(MPLAYER_PL,state)
+        addSong(state, songs) {
+
+            if (songs instanceof Array) {
+                state.favorites.push(...songs)
+                state.markedSongs = []
+            } else {
+                if (state.favorites.findIndex(s => s.songid == songs.songid) < 0) {
+                    state.favorites.push(songs)
+                }
+                //未定逻辑。。。
+            }
+
+            localCacheProxy.setCache(MPLAYER_PL, state)
         },
         /* 移除收藏的一首歌曲 */
         removeSong(state, id) {
@@ -103,7 +132,7 @@ const store = new Vuex.Store({
             if (index >= 0) {
                 state.favorites.splice(index, 1)
             }
-           localCacheProxy.setCache(MPLAYER_PL,state)
+            localCacheProxy.setCache(MPLAYER_PL, state)
         },
         /* 当前播放时间 */
         currentTime(state, time) {
@@ -117,7 +146,17 @@ const store = new Vuex.Store({
         changeMode(state, mode) {
             state.playMode = mode
             //TODO::
-           localCacheProxy.setCache(MPLAYER_PL,state)
+            localCacheProxy.setCache(MPLAYER_PL, state)
+        },
+        markSong(state, s) {
+            if (s.isAdd) {
+                state.markedSongs.push(s.song)
+            } else {
+                let index = state.markedSongs.findIndex(value => value.songid === s.song.songid)
+                if (index >= 0) {
+                    state.markedSongs.splice(index, 1)
+                }
+            }
         }
     },
 
@@ -144,11 +183,11 @@ const store = new Vuex.Store({
             }
             return nextId
         },
-        preId(state, getters) {           
-            let nextId, 
+        preId(state, getters) {
+            let nextId,
                 index = getters.findIndex(p => {
-                return p.songid == state.playingId
-            })
+                    return p.songid == state.playingId
+                })
             if (index >= 0) {
                 /* 是不是第一首歌曲 */
                 let len = getters.songs.length

@@ -35,11 +35,24 @@
     </div>
     <div class="ui-reelList-viewport">
         <div v-if="songs.length > 0" class="ui-reelList-canvas">
-            <song v-for="item in songs" :key="item.id" :song="item" v-on:changeId="changeId">
+            <song v-for="item in songs" :key="item.id" :song="item" :allChecked="allChecked" v-on="markSong">
             </song>
         </div>
         <div v-else style="text-align: center;margin:20px 0">
             <div class="text">没有数据</div>
+        </div>
+    </div>
+    <div class="ui-reelList-footer">
+        <div id="myFooter" class="p-footer" style="display: block;">
+            <div class="select-all-combo" @click.stop="checkAll">
+                <div :class="['select-all-checkbox',allChecked?'select-all-checked':'select-all-unchecked']">
+                    <span></span>
+                </div>
+                <div class="select-all-text">全选</div>
+            </div>           
+            <div class="playlist-button add-button" style="display: block;" @click="addSongs"></div>            
+            <div class="playlist-button delete-button" style="display: block;"></div>           
+            <div class="playlist-length">共有<span>{{songs.length}}</span>首歌</div>
         </div>
     </div>
 </div>
@@ -53,6 +66,11 @@
     import {mapState} from 'vuex'
     export default {
         name: 'song-list',
+        data(){
+            return{
+                allChecked : false              
+            }
+        },
         components: {
             Song
         },
@@ -60,7 +78,13 @@
             songs: state => state.result
         }),
         methods: {
-
+            checkAll:function(){
+                this.allChecked = ! this.allChecked
+            },
+            addSongs:function(){
+                this.$store.commit('addSong',this.$store.state.markedSongs)     
+                this.allChecked = false           
+            }
         },
         mounted: function (ev) {
             this.$store.dispatch('hotSongs')

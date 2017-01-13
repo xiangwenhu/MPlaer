@@ -33,9 +33,8 @@
     export default {
         name: 'search-box',   
         methods: {
-            search: async function (ev) {
-                this.$store.dispatch('searchAsync', this.keyWords)
-                console.log(JSON.stringify(this.$store.state))
+            search: async function (ev) {               
+                this.keyWords && this.$store.dispatch('searchAsync', this.keyWords)               
             }
         }        
     }

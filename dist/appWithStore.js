@@ -605,31 +605,37 @@ const MPLAYER_PL = '_MPlayer_PlayingList_'
 
 /* 本地缓存 */
 const localCache = {
-    playingId: null,  /*当前播放歌曲id*/   
+    playingId: null,  /*当前播放歌曲id*/
     currentTime: -1,  /*当前播放歌曲时间*/
     songDetail: null, /*当前播放歌曲详情 */
-    playMode: 1, /*  播放模式 */
+    playMode: 1, /*  播放模式   1 顺序播放， 2单曲播放， 10随心听*/
     hearts: [],  /*  随心听歌曲 */
     keyWords: '云',/* 搜索的关键字*/
     result: [],/* 搜索的结果 */
-    lyc:'', /* 歌词 */
-    favorites:[{
-        songname:'恭喜发财',
-        songid:'8245250'
-    },{
-        songname:'伤了你的心的我的心好伤心',
-        songid:'580824'  
+    markedSongs: [], /* 标记的歌曲 */
+    lyc: '', /* 歌词 */
+    channels: [], // 频道    
+    favorites: [{
+        songname: '寂寞的人伤心的歌',
+        songid: '265046969'
+    }, {
+        songname: '逆流成河',
+        songid: '106125582'
     }],
 }
 
-let state  =  Object.assign( {}, localCache ,__WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].getCache(MPLAYER_PL))
+let state = Object.assign({}, localCache, __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].getCache(MPLAYER_PL), {
+    playingId: null,
+    markedSongs:[],
+    playMode:1
+})
 
 
 
 __WEBPACK_IMPORTED_MODULE_0_vue___default.a.use(__WEBPACK_IMPORTED_MODULE_1_vuex___default.a)
 
 const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
-    state:state,
+    state: state,
     actions: {
         /* 搜索歌曲 */
         async searchAsync({commit}, keyWords) {
@@ -653,6 +659,19 @@ const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
         async songDetail({commit}, id) {
             let detail = await __WEBPACK_IMPORTED_MODULE_2__apiProxy__["a" /* default */].songDetail(id)
             commit('songDetail', detail)
+        },
+        /*   */
+        async channels({state}) {
+            let channels = await __WEBPACK_IMPORTED_MODULE_2__apiProxy__["a" /* default */].channels()
+            state.channels = channels.result[0].channellist
+        },
+        /* 随心听 */
+        async toHearts({dispatch, commit, state}) {
+            let channel = state.channels[~~(Math.random() * state.channels.length)]
+            let hearts = await __WEBPACK_IMPORTED_MODULE_2__apiProxy__["a" /* default */].channelSongs(channel['ch_name'])
+            state.hearts = hearts.result.songlist
+            commit('changeMode', 10)
+            dispatch('next')
         },
         /* 更换当前播放的id */
         changeId({commit, dispatch}, id) {
@@ -691,9 +710,19 @@ const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
             state.songDetail = detail
         },
         /*  添加歌曲到收藏 */
-        addSong(state, song) {
-            state.favorites.push(song)
-            __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].setCache(MPLAYER_PL,state)
+        addSong(state, songs) {
+
+            if (songs instanceof Array) {
+                state.favorites.push(...songs)
+                state.markedSongs = []
+            } else {
+                if (state.favorites.findIndex(s => s.songid == songs.songid) < 0) {
+                    state.favorites.push(songs)
+                }
+                //未定逻辑。。。
+            }
+
+            __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].setCache(MPLAYER_PL, state)
         },
         /* 移除收藏的一首歌曲 */
         removeSong(state, id) {
@@ -701,7 +730,7 @@ const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
             if (index >= 0) {
                 state.favorites.splice(index, 1)
             }
-           __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].setCache(MPLAYER_PL,state)
+            __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].setCache(MPLAYER_PL, state)
         },
         /* 当前播放时间 */
         currentTime(state, time) {
@@ -715,7 +744,17 @@ const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
         changeMode(state, mode) {
             state.playMode = mode
             //TODO::
-           __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].setCache(MPLAYER_PL,state)
+            __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].setCache(MPLAYER_PL, state)
+        },
+        markSong(state, s) {
+            if (s.isAdd) {
+                state.markedSongs.push(s.song)
+            } else {
+                let index = state.markedSongs.findIndex(value => value.songid === s.song.songid)
+                if (index >= 0) {
+                    state.markedSongs.splice(index, 1)
+                }
+            }
         }
     },
 
@@ -742,11 +781,11 @@ const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
             }
             return nextId
         },
-        preId(state, getters) {           
-            let nextId, 
+        preId(state, getters) {
+            let nextId,
                 index = getters.findIndex(p => {
-                return p.songid == state.playingId
-            })
+                    return p.songid == state.playingId
+                })
             if (index >= 0) {
                 /* 是不是第一首歌曲 */
                 let len = getters.songs.length
@@ -1338,7 +1377,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
     mounted: function () {
         if(this.$store.state.favorites){
             this.$store.dispatch('changeId',this.$store.state.favorites[0].songid)
-        }           
+        }  
+        this.$store.dispatch('channels')         
     }
 };
 
@@ -1399,7 +1439,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
     },
     computed:__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0_vuex__["mapState"])([
         'currentTime',
-        'playingId'           
+        'playingId',  
+        'songDetail'         
     ]),
     watch:{
         currentTime(to,from){
@@ -1525,7 +1566,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
          
         },
         listenHearts: function(){
-                
+            this.$store.dispatch('toHearts')
         }
     },
     watch:{
@@ -1575,7 +1616,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /* harmony default export */ exports["default"] = {
     name:'playing-list',             
     methods:{
-        changeId:function(ev){
+        changePlayingId:function(ev){
             let el = ev.target               
             if(el.getAttribute("data-id") != null){
                 this.$store.dispatch('changeId',el.getAttribute("data-id"))
@@ -1649,9 +1690,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /* harmony default export */ exports["default"] = {
     name: 'search-box',   
     methods: {
-        search: async function (ev) {
-            this.$store.dispatch('searchAsync', this.keyWords)
-            console.log(JSON.stringify(this.$store.state))
+        search: async function (ev) {               
+            this.keyWords && this.$store.dispatch('searchAsync', this.keyWords)               
         }
     }        
 };
@@ -1694,15 +1734,41 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 /* harmony default export */ exports["default"] = {
     name:'song',
-    props:['song'],
+    props:['song','allChecked'],
+    data(){
+        return {
+            isChecked:false
+        }
+    },
     methods:{
         addSong:function(){
             this.$store.commit('addSong',this.song)
         },
-        changeId:function(){
+        changePlayingId:function(){
             this.$store.dispatch('changeId',this.song.songid)
+        },
+        checkSong:function(){
+            this.isChecked = !this.isChecked
+            this.$store.commit('markSong',{
+                isAdd:this.isChecked,
+                song:this.song
+            })
+        }           
+    },
+    computed:{
+        classList(){
+            return 'ui-widget-content ui-reelList-row emptyHeart even ' + (this.isChecked ?  'ui-reelList-checked' :'')
         }
-    }        
+    },
+    watch:{
+        allChecked(to){
+            this.isChecked = this.allChecked
+            this.$store.commit('markSong',{
+                isAdd:this.isChecked,
+                song:this.song
+            })
+        }
+    }              
 };
 
 
@@ -1766,11 +1832,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
 /* harmony default export */ exports["default"] = {
     name: 'song-list',
+    data(){
+        return{
+            allChecked : false              
+        }
+    },
     components: {
         Song: __WEBPACK_IMPORTED_MODULE_0__Song_vue___default.a
     },
@@ -1778,7 +1862,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
         songs: state => state.result
     }),
     methods: {
-
+        checkAll:function(){
+            this.allChecked = ! this.allChecked
+        },
+        addSongs:function(){
+            this.$store.commit('addSong',this.$store.state.markedSongs)     
+            this.allChecked = false           
+        }
     },
     mounted: function (ev) {
         this.$store.dispatch('hotSongs')
@@ -1796,7 +1886,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "playingList"
   }, [_c('ul', {
     on: {
-      "click": _vm.changeId
+      "click": _vm.changePlayingId
     }
   }, _vm._l((_vm.list), function(item) {
     return _c('li', {
@@ -1932,7 +2022,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('div', {
-    staticClass: "ui-widget-content ui-reelList-row emptyHeart even",
+    class: _vm.classList,
     staticStyle: {
       "top": "0px"
     },
@@ -1941,7 +2031,15 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   }, [_c('div', {
     staticClass: "ui-reelList-cell  c0"
-  }, [_vm._m(0), _c('span', {
+  }, [_c('div', {
+    staticClass: "ui-reelList-checkbox",
+    on: {
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.checkSong($event)
+      }
+    }
+  }, [_c('span')]), _c('span', {
     staticClass: "listening-icon"
   }), _c('span', {
     staticClass: "similar-icon cur-similar"
@@ -1979,15 +2077,11 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     on: {
       "click": function($event) {
         $event.stopPropagation();
-        _vm.changeId($event)
+        _vm.changePlayingId($event)
       }
     }
   }, [_vm._v(">>")])])])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "ui-reelList-checkbox"
-  }, [_c('span')])
-}]}
+},staticRenderFns: []}
 
 /***/ },
 /* 69 */
@@ -2203,12 +2297,16 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "ui-reelList-canvas"
   }, _vm._l((_vm.songs), function(item) {
     return _c('song', {
+      directives: [{
+        name: "on",
+        rawName: "v-on",
+        value: (_vm.markSong),
+        expression: "markSong"
+      }],
       key: item.id,
       attrs: {
-        "song": item
-      },
-      on: {
-        "changeId": _vm.changeId
+        "song": item,
+        "allChecked": _vm.allChecked
       }
     })
   })) : _c('div', {
@@ -2218,7 +2316,44 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   }, [_c('div', {
     staticClass: "text"
-  }, [_vm._v("没有数据")])])])])
+  }, [_vm._v("没有数据")])])]), _c('div', {
+    staticClass: "ui-reelList-footer"
+  }, [_c('div', {
+    staticClass: "p-footer",
+    staticStyle: {
+      "display": "block"
+    },
+    attrs: {
+      "id": "myFooter"
+    }
+  }, [_c('div', {
+    staticClass: "select-all-combo",
+    on: {
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.checkAll($event)
+      }
+    }
+  }, [_c('div', {
+    class: ['select-all-checkbox', _vm.allChecked ? 'select-all-checked' : 'select-all-unchecked']
+  }, [_c('span')]), _c('div', {
+    staticClass: "select-all-text"
+  }, [_vm._v("全选")])]), _c('div', {
+    staticClass: "playlist-button add-button",
+    staticStyle: {
+      "display": "block"
+    },
+    on: {
+      "click": _vm.addSongs
+    }
+  }), _c('div', {
+    staticClass: "playlist-button delete-button",
+    staticStyle: {
+      "display": "block"
+    }
+  }), _c('div', {
+    staticClass: "playlist-length"
+  }, [_vm._v("共有"), _c('span', [_vm._v(_vm._s(_vm.songs.length))]), _vm._v("首歌")])])])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('div', {
     staticClass: "ui-reelList-header ui-state-default",
@@ -2345,13 +2480,13 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "log",
     attrs: {
       "target": "_blank",
-      "href": ""
+      "href": "javascript:void(0)"
     }
   }, [_c('img', {
     attrs: {
       "width": "180",
       "height": "180",
-      "src": _vm.songDetails ? _vm.songDetails.songinfo.pic_big : '//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'
+      "src": _vm.songDetail ? _vm.songDetail.songinfo.pic_big : '//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'
     }
   })]), _c('div', {
     staticClass: "album-name"
@@ -2361,7 +2496,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "target": "_blank",
       "href": "javascript:void(0)"
     }
-  }, [_vm._v(_vm._s(_vm.songDetails ? _vm.songDetails.songinfo.author : ''))]), _c('span', {
+  }, [_vm._v(_vm._s(_vm.songDetail ? _vm.songDetail.songinfo.author : ''))]), _c('span', {
     staticClass: "icon"
   })])]), _c('div', {
     staticClass: "lrc-wrapper ui-lrc ui-lrc-vertical lrc",

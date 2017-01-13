@@ -1,11 +1,11 @@
 <template>
     <div class="mb-layout-bd column3" id="lrcCol">
         <div class="album-wrapper">
-            <a target="_blank" class="log" href="">
-                <img width="180" height="180" :src="songDetails ? songDetails.songinfo.pic_big :'//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'">
+            <a target="_blank" class="log" href="javascript:void(0)">
+                <img width="180" height="180" :src="songDetail ? songDetail.songinfo.pic_big :'//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'">
             </a>
             <div class="album-name">
-                <a target="_blank" class="log" href="javascript:void(0)">{{songDetails? songDetails.songinfo.author:''}}</a>
+                <a target="_blank" class="log" href="javascript:void(0)">{{songDetail? songDetail.songinfo.author:''}}</a>
                 <span class="icon"></span>
             </div>
         </div>
@@ -45,7 +45,8 @@
         },
         computed:mapState([
             'currentTime',
-            'playingId'           
+            'playingId',  
+            'songDetail'         
         ]),
         watch:{
             currentTime(to,from){

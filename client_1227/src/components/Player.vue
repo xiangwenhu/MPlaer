@@ -73,7 +73,7 @@
              
             },
             listenHearts: function(){
-                    
+                this.$store.dispatch('toHearts')
             }
         },
         watch:{

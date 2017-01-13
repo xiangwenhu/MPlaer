@@ -6,7 +6,7 @@
             <a class="column1-icon listening-icon listen-icon-playing" hidefocus="true"></a>
         </div>
         <div class="playingList">
-            <ul @click="changeId">
+            <ul @click="changePlayingId">
                 <li class="ui-lrc-sentence ui-lrc-prev" v-for="item in list" :key="item.songid" :data-id="item.songid" @mouseenter.stop="msenter" @mouseleave.stop="msleave">
                     <a :class="['text', item.songid == pid ? 'playingItem' : '']" :data-id="item.songid">{{item.songname}}</a>
                     <a :class="['song-item','hide']" @click.stop="removeSong" :data-id="item.songid" href="javascript:void(0)">x</a>
@@ -22,7 +22,7 @@
     export default {
         name:'playing-list',             
         methods:{
-            changeId:function(ev){
+            changePlayingId:function(ev){
                 let el = ev.target               
                 if(el.getAttribute("data-id") != null){
                     this.$store.dispatch('changeId',el.getAttribute("data-id"))
