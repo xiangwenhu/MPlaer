@@ -39,3 +39,9 @@
         }        
     }
 </script>
+
+<style>
+    #searchBar{
+        left: 20% !important
+    }
+</style>
