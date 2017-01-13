@@ -6,6 +6,14 @@ Music Player,简约而不简单<br/>
 
 依赖百度API, <br/>
 chrome 版本55以上，chrome需要开启javascript相关试验性特性 <br/>
+打开步骤，<br/>
+1）：打开chrome <br/>
+2)：输入 chrome://flags/ <br/>
+3)：ctrl +F 搜索javascript
+4):找到 
+实验性 JavaScript Mac, Windows, Linux, Chrome OS, Android，点击启用，<br/>
+5）：重启浏览器  <br/>
+
 
 下载后
 npm install   <br/>
