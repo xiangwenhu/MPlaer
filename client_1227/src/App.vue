@@ -3,7 +3,7 @@
     <div class="header">
       <div class="inner">     
         <router-link to="/index">播放器</router-link>
-        <router-link to="/cinema">影院</router-link> 
+        <router-link to="/cinema">影院模式</router-link> 
       </div>
     </div>
     <transition name="fade" mode="out-in">
@@ -38,7 +38,7 @@
     vertical-align: middle;
     font-weight: 300;
     letter-spacing: .075em;
-    margin-right: 1.8em;   
+    margin:0 1em;   
     font-size: 15px
 }
 .header a:hover{    
