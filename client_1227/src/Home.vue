@@ -24,8 +24,7 @@
             </div>
         </div>
 
-        <player :playingId="playingId" v-on:toHearts="toHearts" v-on:timeupdate="updatetime" v-on:songDetail='detail' v-on:playNextSong="nextSong"
-            v-on:playPreSong="preSong"></player>
+        <player></player>
     </div>
 </template>
 

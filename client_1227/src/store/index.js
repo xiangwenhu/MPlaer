@@ -29,7 +29,8 @@ const localCache = {
 let state = Object.assign({}, localCache, localCacheProxy.getCache(MPLAYER_PL), {
     playingId: null,
     markedSongs:[],
-    playMode:1
+    playMode:1 ,
+    songDetail:null 
 })
 
 
@@ -170,10 +171,11 @@ const store = new Vuex.Store({
             }
             return songs
         },
-        nextId(state, getters) {
+        nextId(state, getters) {        
+            
             let nextId,
                 index = getters.songs.findIndex(p => {
-                    return p.songid == state.playingId
+                    return  p.songid && p.songid == state.playingId
                 })
             if (index >= 0) {
                 /* 是不是最后一首歌曲 */
@@ -186,7 +188,7 @@ const store = new Vuex.Store({
         preId(state, getters) {
             let nextId,
                 index = getters.findIndex(p => {
-                    return p.songid == state.playingId
+                    return  p.songid && p.songid == state.playingId
                 })
             if (index >= 0) {
                 /* 是不是第一首歌曲 */

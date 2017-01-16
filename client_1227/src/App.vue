@@ -2,8 +2,8 @@
   <div>
     <div class="header">
       <div class="inner">     
-        <router-link to="/index">播放器</router-link>
-        <router-link to="/cinema">影院模式</router-link> 
+        <router-link to="/index">我的音乐</router-link>
+        <router-link to="/cinema">随心听</router-link> 
       </div>
     </div>
     <transition name="fade" mode="out-in">
