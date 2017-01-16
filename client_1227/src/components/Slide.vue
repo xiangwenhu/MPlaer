@@ -1,11 +1,11 @@
 <template>
-    <div class="fm-player">
+    <div :class='["fm-player",playingId == item.songid ? "playing":""]'>
         <div class="fm-album">
             <a href="javascript:;" target="_blank" hidefocus="true" title="播放[空格键]" class="play stop">
                 <img :src='songinfo.pic_big?songinfo.pic_big:""' width="240" height="240" style="display: block;" title="" />
             </a>
             <div class="mask" style="display: block;"></div>
-            <a href="javascript:;" title="播放[空格键]" class="mask-text" style="display: inline;" @click="play">点击播放</a>
+            <a href="javascript:;" title="" class="mask-text" style="display: inline;" @click="play">{{ playingId == item.songid ?"" :"点击播放"}}</a>
         </div>
         <div class="fm-songinfo">
             <p class="fm-song-title">
@@ -39,6 +39,7 @@
 <script>
 
     import apiProxy from '../store/apiProxy'
+    import { mapState } from 'vuex'
 
     export default {
         name: 'slide',
@@ -48,9 +49,12 @@
                 songinfo: {}
             }
         },
+        computed: mapState(['playingId']),
         methods: {
             play: function () {
-                this.item && this.$store.dispatch('changeId', this.item.songid)
+                if(this.playingId != this.item.songid){
+                    this.item && this.$store.dispatch('changeId', this.item.songid)
+                }
             },
             next: function () {
                 this.$store.dispatch('next')
@@ -84,5 +88,9 @@
     .fm-songinfo .fm-album-name a,
     .fm-songinfo .fm-artist-name a {
         margin-left: 0.5em
+    }
+
+    .playing{
+        background-color: rgba(194, 230, 75, 0.79)
     }
 </style>

@@ -37,7 +37,7 @@
         components: {
             Slide
         },
-        computed: mapState(['hearts']),
+        computed: mapState(['hearts','playingId']),
         methods: {
             pre:function(){
                 this.currentIndex >= 1   &&  this.currentIndex--               
@@ -61,6 +61,10 @@
             },
             hearts(to,from){
                 this.items =  (this.hearts || []).slice(0,5)
+            },
+            playingId(to,from){
+                let index = this.hearts.findIndex(s=> s.songid == to)
+                this.currentIndex  = index
             }
         }
     }
@@ -100,5 +104,6 @@
         top:45%;   
          transform: rotate(0deg)     
     }
+
 
 </style>

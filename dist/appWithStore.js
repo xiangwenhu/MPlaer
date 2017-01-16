@@ -1385,7 +1385,7 @@ exports = module.exports = __webpack_require__(0)();
 
 
 // module
-exports.push([module.i, ".fm-songinfo .fm-album-name a,.fm-songinfo .fm-artist-name a{margin-left:.5em}", ""]);
+exports.push([module.i, ".fm-songinfo .fm-album-name a,.fm-songinfo .fm-artist-name a{margin-left:.5em}.playing{background-color:rgba(194,230,75,.79)}", ""]);
 
 // exports
 
@@ -2444,6 +2444,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__store_apiProxy__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vuex__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_vuex___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_vuex__);
 Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
@@ -2487,6 +2489,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 
+
 /* harmony default export */ exports["default"] = {
     name: 'slide',
     props: ['item'],
@@ -2495,9 +2498,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
             songinfo: {}
         }
     },
+    computed: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_vuex__["mapState"])(['playingId']),
     methods: {
         play: function () {
-            this.item && this.$store.dispatch('changeId', this.item.songid)
+            if(this.playingId != this.item.songid){
+                this.item && this.$store.dispatch('changeId', this.item.songid)
+            }
         },
         next: function () {
             this.$store.dispatch('next')
@@ -2575,7 +2581,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
     components: {
         Slide: __WEBPACK_IMPORTED_MODULE_0__Slide_vue___default.a
     },
-    computed: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_vuex__["mapState"])(['hearts']),
+    computed: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_vuex__["mapState"])(['hearts','playingId']),
     methods: {
         pre:function(){
             this.currentIndex >= 1   &&  this.currentIndex--               
@@ -2599,6 +2605,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
         },
         hearts(to,from){
             this.items =  (this.hearts || []).slice(0,5)
+        },
+        playingId(to,from){
+            let index = this.hearts.findIndex(s=> s.songid == to)
+            this.currentIndex  = index
         }
     }
 };
@@ -3531,7 +3541,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
   return _c('div', {
-    staticClass: "fm-player"
+    class: ["fm-player", _vm.playingId == _vm.item.songid ? "playing" : ""]
   }, [_c('div', {
     staticClass: "fm-album"
   }, [_c('a', {
@@ -3564,12 +3574,12 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     },
     attrs: {
       "href": "javascript:;",
-      "title": "播放[空格键]"
+      "title": ""
     },
     on: {
       "click": _vm.play
     }
-  }, [_vm._v("点击播放")])]), _c('div', {
+  }, [_vm._v(_vm._s(_vm.playingId == _vm.item.songid ? "" : "点击播放"))])]), _c('div', {
     staticClass: "fm-songinfo"
   }, [_c('p', {
     staticClass: "fm-song-title"
