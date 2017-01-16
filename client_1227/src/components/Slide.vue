@@ -2,37 +2,37 @@
     <div class="fm-player">
         <div class="fm-album">
             <a href="javascript:;" target="_blank" hidefocus="true" title="播放[空格键]" class="play stop">
-                <img :src='songinfo.pic_big?songinfo.pic_big:""' width="240" height="240" style="display: block;" title=""/>
-</a>
-<div class="mask" style="display: block;"></div>
-<a href="javascript:;" title="播放[空格键]" class="mask-text" style="display: inline;" @click="play">点击播放</a>
-</div>
-    <div class="fm-songinfo">
-        <p class="fm-song-title">
-            <a target="_blank" title="item.title" href="javascript:void()">{{item.title}}</a>
-        </p>
-        <p class="fm-album-name">
-            专辑：<a target="_blank" title="" :href='songinfo.album_id ? "http://music.baidu.com/album/" + songinfo.album_id:""'>{{songinfo.album_title}}</a>
-        </p>
-        <p class="fm-artist-name" target="">
-            演唱：<a target="_blank" :title="item.artist" :href='songinfo.ting_uid ? "http://music.baidu.com/artist/" + songinfo.ting_uid:""'>{{item.artist}}</a>
-        </p>
-    </div>
-    <div class="fm-play-panel">
-        <ul>
-            <li class="fm-play">
-                <a href="javascript:;" title="播放[空格键]" class="play stop" hidefocus="true" @click="play"></a>
-            </li>
-            <li class="fm-next">
-                <a href="javascript:;" title="下一首[→]" hidefocus="true" @click.stop="next"></a>
-            </li>
-            <li class="fm-trashcan">
-                <a href="javascript:;" title="垃圾桶" hidefocus="true"></a>
-            </li>
-        </ul>
-    </div>
+                <img :src='songinfo.pic_big?songinfo.pic_big:""' width="240" height="240" style="display: block;" title="" />
+            </a>
+            <div class="mask" style="display: block;"></div>
+            <a href="javascript:;" title="播放[空格键]" class="mask-text" style="display: inline;" @click="play">点击播放</a>
+        </div>
+        <div class="fm-songinfo">
+            <p class="fm-song-title">
+                <a target="_blank" title="item.title" href="javascript:void()">{{item.title}}</a>
+            </p>
+            <p class="fm-album-name">
+                专辑：<a target="_blank" title="" :href='songinfo.album_id ? "http://music.baidu.com/album/" + songinfo.album_id:""'>{{songinfo.album_title}}</a>
+            </p>
+            <p class="fm-artist-name" target="">
+                演唱：<a target="_blank" :title="item.artist" :href='songinfo.ting_uid ? "http://music.baidu.com/artist/" + songinfo.ting_uid:""'>{{item.artist}}</a>
+            </p>
+        </div>
+        <div class="fm-play-panel">
+            <ul>
+                <li class="fm-play">
+                    <a href="javascript:;" title="播放[空格键]" class="play stop" hidefocus="true" @click="play"></a>
+                </li>
+                <li class="fm-next">
+                    <a href="javascript:;" title="下一首[→]" hidefocus="true" @click.stop="next"></a>
+                </li>
+                <li class="fm-trashcan">
+                    <a href="javascript:;" title="垃圾桶" hidefocus="true"></a>
+                </li>
+            </ul>
+        </div>
 
-</div>
+    </div>
 </template>
 
 
@@ -56,10 +56,20 @@
                 this.$store.dispatch('next')
             }
         },
+        updated: async function () {      
+            try {
+                if( !this.songinfo.song_id || (this.songinfo.song_id && this.item.songid != this.songinfo.song_id) ){                   
+                    let detail = await apiProxy.songDetail(this.item.songid)
+                    this.songinfo = detail.songinfo
+                }
+            }catch(err){
+                
+            }
+        },
         mounted: async function () {      
-            try {   
+            try {                               
                 let detail = await apiProxy.songDetail(this.item.songid)
-                this.songinfo = detail.songinfo
+                this.songinfo = detail.songinfo               
             }catch(err){
                 
             }
@@ -71,10 +81,8 @@
 
 
 <style>
-    .fm-songinfo .fm-album-name a,.fm-songinfo .fm-artist-name a{
-        margin-left:0.5em
+    .fm-songinfo .fm-album-name a,
+    .fm-songinfo .fm-artist-name a {
+        margin-left: 0.5em
     }
-
-
-
 </style>

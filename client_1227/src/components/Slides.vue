@@ -6,7 +6,7 @@
             </a>
         </div>
         <div id="slides">
-            <slide v-for="(item,index) in hearts" :key="item.id" :item="item" v-if="filterItems(index)">
+            <slide v-for="(item,index) in items" :key="item.id" :item="item">
             </slide>
         </div>
         <div>
@@ -30,7 +30,8 @@
         name: 'slides',
         data() {
             return {
-                currentIndex: 0
+                currentIndex: 0,
+                items:[]
             }
         },
         components: {
@@ -39,22 +40,29 @@
         computed: mapState(['hearts']),
         methods: {
             pre:function(){
-                this.currentIndex >= 1   &&  this.currentIndex--
+                this.currentIndex >= 1   &&  this.currentIndex--               
             },
             next:function(){
                 this.currentIndex < this.hearts.length && this.currentIndex++
-            },
-            filterItems:function(index){
-                if(this.currentIndex < 2){
-                    return  index - this. currentIndex >= 0 && index - this. currentIndex <= 4
-                }else if(this.currentIndex >= this.hearts.length -2 ){
-                    return  index + 5 < this.hearts.length
-                }else{
-                    return  index - this. currentIndex >= 0 && index - this. currentIndex <= 4
-                }
-                return false
-            }
+            }       
         },
+        mounted:function(){
+            this.items = (this.hearts || []).slice(0,5)
+        },
+        watch:{
+            currentIndex(to,from){
+                if(to < 2){
+                    this.items = this.hearts.slice(to,to + 5)
+                }else if (to >= this.hearts.length -2 ){
+                    this.items = this.hearts.slice(this.hearts.length-5,this.hearts.length)
+                }else {
+                    this.items = this.hearts.slice(to-2,to+3)
+                }
+            },
+            hearts(to,from){
+                this.items =  (this.hearts || []).slice(0,5)
+            }
+        }
     }
 
 

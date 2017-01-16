@@ -5,7 +5,7 @@ webpackJsonp([0],[
 /***/ function(module, exports, __webpack_require__) {
 
 /**
- * vuex v2.0.0-rc.6
+ * vuex v2.1.1
  * (c) 2016 Evan You
  * @license MIT
  */
@@ -70,27 +70,39 @@ function applyMixin (Vue) {
   }
 }
 
-function mapState (states) {
+var mapState = normalizeNamespace(function (namespace, states) {
   var res = {}
   normalizeMap(states).forEach(function (ref) {
     var key = ref.key;
     var val = ref.val;
 
     res[key] = function mappedState () {
+      var state = this.$store.state
+      var getters = this.$store.getters
+      if (namespace) {
+        var module = this.$store._modulesNamespaceMap[namespace]
+        if (!module) {
+          warnNamespace('mapState', namespace)
+          return
+        }
+        state = module.state
+        getters = module.context.getters
+      }
       return typeof val === 'function'
-        ? val.call(this, this.$store.state, this.$store.getters)
-        : this.$store.state[val]
+        ? val.call(this, state, getters)
+        : state[val]
     }
   })
   return res
-}
+})
 
-function mapMutations (mutations) {
+var mapMutations = normalizeNamespace(function (namespace, mutations) {
   var res = {}
   normalizeMap(mutations).forEach(function (ref) {
     var key = ref.key;
     var val = ref.val;
 
+    val = namespace + val
     res[key] = function mappedMutation () {
       var args = [], len = arguments.length;
       while ( len-- ) args[ len ] = arguments[ len ];
@@ -99,14 +111,15 @@ function mapMutations (mutations) {
     }
   })
   return res
-}
+})
 
-function mapGetters (getters) {
+var mapGetters = normalizeNamespace(function (namespace, getters) {
   var res = {}
   normalizeMap(getters).forEach(function (ref) {
     var key = ref.key;
     var val = ref.val;
 
+    val = namespace + val
     res[key] = function mappedGetter () {
       if (!(val in this.$store.getters)) {
         console.error(("[vuex] unknown getter: " + val))
@@ -115,14 +128,15 @@ function mapGetters (getters) {
     }
   })
   return res
-}
+})
 
-function mapActions (actions) {
+var mapActions = normalizeNamespace(function (namespace, actions) {
   var res = {}
   normalizeMap(actions).forEach(function (ref) {
     var key = ref.key;
     var val = ref.val;
 
+    val = namespace + val
     res[key] = function mappedAction () {
       var args = [], len = arguments.length;
       while ( len-- ) args[ len ] = arguments[ len ];
@@ -131,12 +145,35 @@ function mapActions (actions) {
     }
   })
   return res
-}
+})
 
 function normalizeMap (map) {
   return Array.isArray(map)
     ? map.map(function (key) { return ({ key: key, val: key }); })
     : Object.keys(map).map(function (key) { return ({ key: key, val: map[key] }); })
+}
+
+function normalizeNamespace (fn) {
+  return function (namespace, map) {
+    if (typeof namespace !== 'string') {
+      map = namespace
+      namespace = ''
+    } else if (namespace.charAt(namespace.length - 1) !== '/') {
+      namespace += '/'
+    }
+    return fn(namespace, map)
+  }
+}
+
+function warnNamespace (helper, namespace) {
+  console.error(("[vuex] module namespace not found in " + helper + "(): " + namespace))
+}
+
+/**
+ * forEach for object
+ */
+function forEachValue (obj, fn) {
+  Object.keys(obj).forEach(function (key) { return fn(obj[key], key); })
 }
 
 function isObject (obj) {
@@ -149,6 +186,146 @@ function isPromise (val) {
 
 function assert (condition, msg) {
   if (!condition) { throw new Error(("[vuex] " + msg)) }
+}
+
+var Module = function Module (rawModule, runtime) {
+  this.runtime = runtime
+  this._children = Object.create(null)
+  this._rawModule = rawModule
+};
+
+var prototypeAccessors$1 = { state: {},namespaced: {} };
+
+prototypeAccessors$1.state.get = function () {
+  return this._rawModule.state || {}
+};
+
+prototypeAccessors$1.namespaced.get = function () {
+  return !!this._rawModule.namespaced
+};
+
+Module.prototype.addChild = function addChild (key, module) {
+  this._children[key] = module
+};
+
+Module.prototype.removeChild = function removeChild (key) {
+  delete this._children[key]
+};
+
+Module.prototype.getChild = function getChild (key) {
+  return this._children[key]
+};
+
+Module.prototype.update = function update (rawModule) {
+  this._rawModule.namespaced = rawModule.namespaced
+  if (rawModule.actions) {
+    this._rawModule.actions = rawModule.actions
+  }
+  if (rawModule.mutations) {
+    this._rawModule.mutations = rawModule.mutations
+  }
+  if (rawModule.getters) {
+    this._rawModule.getters = rawModule.getters
+  }
+};
+
+Module.prototype.forEachChild = function forEachChild (fn) {
+  forEachValue(this._children, fn)
+};
+
+Module.prototype.forEachGetter = function forEachGetter (fn) {
+  if (this._rawModule.getters) {
+    forEachValue(this._rawModule.getters, fn)
+  }
+};
+
+Module.prototype.forEachAction = function forEachAction (fn) {
+  if (this._rawModule.actions) {
+    forEachValue(this._rawModule.actions, fn)
+  }
+};
+
+Module.prototype.forEachMutation = function forEachMutation (fn) {
+  if (this._rawModule.mutations) {
+    forEachValue(this._rawModule.mutations, fn)
+  }
+};
+
+Object.defineProperties( Module.prototype, prototypeAccessors$1 );
+
+var ModuleCollection = function ModuleCollection (rawRootModule) {
+  var this$1 = this;
+
+  // register root module (Vuex.Store options)
+  this.root = new Module(rawRootModule, false)
+
+  // register all nested modules
+  if (rawRootModule.modules) {
+    forEachValue(rawRootModule.modules, function (rawModule, key) {
+      this$1.register([key], rawModule, false)
+    })
+  }
+};
+
+ModuleCollection.prototype.get = function get (path) {
+  return path.reduce(function (module, key) {
+    return module.getChild(key)
+  }, this.root)
+};
+
+ModuleCollection.prototype.getNamespace = function getNamespace (path) {
+  var module = this.root
+  return path.reduce(function (namespace, key) {
+    module = module.getChild(key)
+    return namespace + (module.namespaced ? key + '/' : '')
+  }, '')
+};
+
+ModuleCollection.prototype.update = function update$1 (rawRootModule) {
+  update(this.root, rawRootModule)
+};
+
+ModuleCollection.prototype.register = function register (path, rawModule, runtime) {
+    var this$1 = this;
+    if ( runtime === void 0 ) runtime = true;
+
+  var parent = this.get(path.slice(0, -1))
+  var newModule = new Module(rawModule, runtime)
+  parent.addChild(path[path.length - 1], newModule)
+
+  // register nested modules
+  if (rawModule.modules) {
+    forEachValue(rawModule.modules, function (rawChildModule, key) {
+      this$1.register(path.concat(key), rawChildModule, runtime)
+    })
+  }
+};
+
+ModuleCollection.prototype.unregister = function unregister (path) {
+  var parent = this.get(path.slice(0, -1))
+  var key = path[path.length - 1]
+  if (!parent.getChild(key).runtime) { return }
+
+  parent.removeChild(key)
+};
+
+function update (targetModule, newModule) {
+  // update target module
+  targetModule.update(newModule)
+
+  // update nested modules
+  if (newModule.modules) {
+    for (var key in newModule.modules) {
+      if (!targetModule.getChild(key)) {
+        console.warn(
+          "[vuex] trying to add a new module '" + key + "' on hot reloading, " +
+          'manual reload is needed'
+        )
+        return
+      }
+      update(targetModule.getChild(key), newModule.modules[key])
+    }
+  }
 }
 
 var Vue // bind on install
@@ -165,34 +342,34 @@ var Store = function Store (options) {
   var strict = options.strict; if ( strict === void 0 ) strict = false;
 
   // store internal state
-  this._options = options
   this._committing = false
   this._actions = Object.create(null)
   this._mutations = Object.create(null)
   this._wrappedGetters = Object.create(null)
-  this._runtimeModules = Object.create(null)
+  this._modules = new ModuleCollection(options)
+  this._modulesNamespaceMap = Object.create(null)
   this._subscribers = []
   this._watcherVM = new Vue()
 
-    // bind commit and dispatch to self
+  // bind commit and dispatch to self
   var store = this
   var ref = this;
   var dispatch = ref.dispatch;
   var commit = ref.commit;
-  this.dispatch = function boundDispatch (type, payload) {
+    this.dispatch = function boundDispatch (type, payload) {
     return dispatch.call(store, type, payload)
-    }
-    this.commit = function boundCommit (type, payload, options) {
-    return commit.call(store, type, payload, options)
   }
+  this.commit = function boundCommit (type, payload, options) {
+    return commit.call(store, type, payload, options)
+    }
 
-  // strict mode
+    // strict mode
   this.strict = strict
 
   // init root module.
   // this also recursively registers all sub-modules
   // and collects all module getters inside this._wrappedGetters
-  installModule(this, state, [], options)
+  installModule(this, state, [], this._modules.root)
 
   // initialize the store vm, which is responsible for the reactivity
   // (also registers _wrappedGetters as computed properties)
@@ -205,22 +382,22 @@ var Store = function Store (options) {
 var prototypeAccessors = { state: {} };
 
 prototypeAccessors.state.get = function () {
-  return this._vm.state
+  return this._vm.$data.state
 };
 
 prototypeAccessors.state.set = function (v) {
   assert(false, "Use store.replaceState() to explicit replace store state.")
 };
 
-Store.prototype.commit = function commit (type, payload, options) {
+Store.prototype.commit = function commit (_type, _payload, _options) {
     var this$1 = this;
 
   // check object-style commit
-  if (isObject(type) && type.type) {
-    options = payload
-    payload = type
-    type = type.type
-  }
+  var ref = unifyObjectStyle(_type, _payload, _options);
+    var type = ref.type;
+    var payload = ref.payload;
+    var options = ref.options;
+
   var mutation = { type: type, payload: payload }
   var entry = this._mutations[type]
   if (!entry) {
@@ -232,17 +409,22 @@ Store.prototype.commit = function commit (type, payload, options) {
       handler(payload)
     })
   })
-  if (!options || !options.silent) {
-    this._subscribers.forEach(function (sub) { return sub(mutation, this$1.state); })
+  this._subscribers.forEach(function (sub) { return sub(mutation, this$1.state); })
+
+  if (options && options.silent) {
+    console.warn(
+      "[vuex] mutation type: " + type + ". Silent option has been removed. " +
+      'Use the filter functionality in the vue-devtools'
+    )
   }
 };
 
-Store.prototype.dispatch = function dispatch (type, payload) {
+Store.prototype.dispatch = function dispatch (_type, _payload) {
   // check object-style dispatch
-  if (isObject(type) && type.type) {
-    payload = type
-    type = type.type
-  }
+  var ref = unifyObjectStyle(_type, _payload);
+    var type = ref.type;
+    var payload = ref.payload;
+
   var entry = this._actions[type]
   if (!entry) {
     console.error(("[vuex] unknown action type: " + type))
@@ -270,7 +452,7 @@ Store.prototype.watch = function watch (getter, cb, options) {
     var this$1 = this;
 
   assert(typeof getter === 'function', "store.watch only accepts a function.")
-  return this._watcherVM.$watch(function () { return getter(this$1.state); }, cb, options)
+  return this._watcherVM.$watch(function () { return getter(this$1.state, this$1.getters); }, cb, options)
 };
 
 Store.prototype.replaceState = function replaceState (state) {
@@ -281,11 +463,11 @@ Store.prototype.replaceState = function replaceState (state) {
   })
 };
 
-Store.prototype.registerModule = function registerModule (path, module) {
+Store.prototype.registerModule = function registerModule (path, rawModule) {
   if (typeof path === 'string') { path = [path] }
   assert(Array.isArray(path), "module path must be a string or an Array.")
-  this._runtimeModules[path.join('.')] = module
-  installModule(this, this.state, path, module)
+  this._modules.register(path, rawModule)
+  installModule(this, this.state, path, this._modules.get(path))
   // reset store to update getters...
   resetStoreVM(this, this.state)
 };
@@ -295,7 +477,7 @@ Store.prototype.unregisterModule = function unregisterModule (path) {
 
   if (typeof path === 'string') { path = [path] }
   assert(Array.isArray(path), "module path must be a string or an Array.")
-    delete this._runtimeModules[path.join('.')]
+    this._modules.unregister(path)
   this._withCommit(function () {
     var parentState = getNestedState(this$1.state, path.slice(0, -1))
     Vue.delete(parentState, path[path.length - 1])
@@ -304,7 +486,7 @@ Store.prototype.unregisterModule = function unregisterModule (path) {
 };
 
 Store.prototype.hotUpdate = function hotUpdate (newOptions) {
-  updateModule(this._options, newOptions)
+  this._modules.update(newOptions)
   resetStore(this)
 };
 
@@ -317,41 +499,14 @@ Store.prototype._withCommit = function _withCommit (fn) {
 
 Object.defineProperties( Store.prototype, prototypeAccessors );
 
-function updateModule (targetModule, newModule) {
-  if (newModule.actions) {
-    targetModule.actions = newModule.actions
-  }
-  if (newModule.mutations) {
-    targetModule.mutations = newModule.mutations
-  }
-  if (newModule.getters) {
-    targetModule.getters = newModule.getters
-  }
-  if (newModule.modules) {
-    for (var key in newModule.modules) {
-      if (!(targetModule.modules && targetModule.modules[key])) {
-        console.warn(
-          "[vuex] trying to add a new module '" + key + "' on hot reloading, " +
-          'manual reload is needed'
-        )
-        return
-      }
-      updateModule(targetModule.modules[key], newModule.modules[key])
-    }
-  }
-}
-
 function resetStore (store) {
   store._actions = Object.create(null)
   store._mutations = Object.create(null)
   store._wrappedGetters = Object.create(null)
+  store._modulesNamespaceMap = Object.create(null)
   var state = store.state
-  // init root module
-  installModule(store, state, [], store._options, true)
-  // init all runtime modules
-  Object.keys(store._runtimeModules).forEach(function (key) {
-    installModule(store, state, key.split('.'), store._runtimeModules[key], true)
-  })
+  // init all modules
+  installModule(store, state, [], store._modules.root, true)
   // reset vm
   resetStoreVM(store, state)
 }
@@ -363,12 +518,12 @@ function resetStoreVM (store, state) {
   store.getters = {}
   var wrappedGetters = store._wrappedGetters
   var computed = {}
-  Object.keys(wrappedGetters).forEach(function (key) {
-    var fn = wrappedGetters[key]
+  forEachValue(wrappedGetters, function (fn, key) {
     // use computed to leverage its lazy-caching mechanism
     computed[key] = function () { return fn(store); }
     Object.defineProperty(store.getters, key, {
-      get: function () { return store._vm[key]; }
+      get: function () { return store._vm[key]; },
+      enumerable: true // for local getters
     })
   })
 
@@ -400,65 +555,135 @@ function resetStoreVM (store, state) {
 
 function installModule (store, rootState, path, module, hot) {
   var isRoot = !path.length
-  var state = module.state;
-  var actions = module.actions;
-  var mutations = module.mutations;
-  var getters = module.getters;
-  var modules = module.modules;
+  var namespace = store._modules.getNamespace(path)
+
+  // register in namespace map
+  if (namespace) {
+    store._modulesNamespaceMap[namespace] = module
+  }
 
   // set state
   if (!isRoot && !hot) {
     var parentState = getNestedState(rootState, path.slice(0, -1))
     var moduleName = path[path.length - 1]
     store._withCommit(function () {
-      Vue.set(parentState, moduleName, state || {})
+      Vue.set(parentState, moduleName, module.state)
     })
   }
 
-  if (mutations) {
-    Object.keys(mutations).forEach(function (key) {
-      registerMutation(store, key, mutations[key], path)
-    })
+  var local = module.context = makeLocalContext(store, namespace)
+
+  module.forEachMutation(function (mutation, key) {
+    var namespacedType = namespace + key
+    registerMutation(store, namespacedType, mutation, path)
+  })
+
+  module.forEachAction(function (action, key) {
+    var namespacedType = namespace + key
+    registerAction(store, namespacedType, action, local, path)
+  })
+
+  module.forEachGetter(function (getter, key) {
+    var namespacedType = namespace + key
+    registerGetter(store, namespacedType, getter, local, path)
+  })
+
+  module.forEachChild(function (child, key) {
+    installModule(store, rootState, path.concat(key), child, hot)
+  })
+}
+
+/**
+ * make localized dispatch, commit and getters
+ * if there is no namespace, just use root ones
+ */
+function makeLocalContext (store, namespace) {
+  var noNamespace = namespace === ''
+
+  var local = {
+    dispatch: noNamespace ? store.dispatch : function (_type, _payload, _options) {
+      var args = unifyObjectStyle(_type, _payload, _options)
+      var payload = args.payload;
+      var options = args.options;
+      var type = args.type;
+
+      if (!options || !options.root) {
+        type = namespace + type
+        if (!store._actions[type]) {
+          console.error(("[vuex] unknown local action type: " + (args.type) + ", global type: " + type))
+          return
+        }
+      }
+
+      return store.dispatch(type, payload)
+    },
+
+    commit: noNamespace ? store.commit : function (_type, _payload, _options) {
+      var args = unifyObjectStyle(_type, _payload, _options)
+      var payload = args.payload;
+      var options = args.options;
+      var type = args.type;
+
+      if (!options || !options.root) {
+        type = namespace + type
+        if (!store._mutations[type]) {
+          console.error(("[vuex] unknown local mutation type: " + (args.type) + ", global type: " + type))
+          return
+        }
+      }
+
+      store.commit(type, payload, options)
+    }
   }
 
-  if (actions) {
-    Object.keys(actions).forEach(function (key) {
-      registerAction(store, key, actions[key], path)
-    })
-  }
+  // getters object must be gotten lazily
+  // because store.getters will be changed by vm update
+  Object.defineProperty(local, 'getters', {
+    get: noNamespace ? function () { return store.getters; } : function () { return makeLocalGetters(store, namespace); }
+  })
 
-  if (getters) {
-    wrapGetters(store, getters, path)
-  }
+  return local
+}
 
-  if (modules) {
-    Object.keys(modules).forEach(function (key) {
-      installModule(store, rootState, path.concat(key), modules[key], hot)
+function makeLocalGetters (store, namespace) {
+  var gettersProxy = {}
+
+  var splitPos = namespace.length
+  Object.keys(store.getters).forEach(function (type) {
+    // skip if the target getter is not match this namespace
+    if (type.slice(0, splitPos) !== namespace) { return }
+
+    // extract local getter type
+    var localType = type.slice(splitPos)
+
+    // Add a port to the getters proxy.
+    // Define as getter property because
+    // we do not want to evaluate the getters in this time.
+    Object.defineProperty(gettersProxy, localType, {
+      get: function () { return store.getters[type]; },
+      enumerable: true
     })
-  }
+  })
+
+  return gettersProxy
 }
 
 function registerMutation (store, type, handler, path) {
-  if ( path === void 0 ) path = [];
-
   var entry = store._mutations[type] || (store._mutations[type] = [])
   entry.push(function wrappedMutationHandler (payload) {
     handler(getNestedState(store.state, path), payload)
   })
 }
 
-function registerAction (store, type, handler, path) {
-  if ( path === void 0 ) path = [];
-
+function registerAction (store, type, handler, local, path) {
   var entry = store._actions[type] || (store._actions[type] = [])
-  var dispatch = store.dispatch;
-  var commit = store.commit;
   entry.push(function wrappedActionHandler (payload, cb) {
     var res = handler({
-      dispatch: dispatch,
-      commit: commit,
-      getters: store.getters,
+      dispatch: local.dispatch,
+      commit: local.commit,
+      getters: local.getters,
       state: getNestedState(store.state, path),
+      rootGetters: store.getters,
       rootState: store.state
     }, payload, cb)
     if (!isPromise(res)) {
@@ -475,21 +700,19 @@ function registerAction (store, type, handler, path) {
   })
 }
 
-function wrapGetters (store, moduleGetters, modulePath) {
-  Object.keys(moduleGetters).forEach(function (getterKey) {
-    var rawGetter = moduleGetters[getterKey]
-    if (store._wrappedGetters[getterKey]) {
-      console.error(("[vuex] duplicate getter key: " + getterKey))
-      return
-    }
-    store._wrappedGetters[getterKey] = function wrappedGetter (store) {
-      return rawGetter(
-        getNestedState(store.state, modulePath), // local state
-        store.getters, // getters
-        store.state // root state
-      )
-    }
-  })
+function registerGetter (store, type, rawGetter, local, path) {
+  if (store._wrappedGetters[type]) {
+    console.error(("[vuex] duplicate getter key: " + type))
+    return
+  }
+  store._wrappedGetters[type] = function wrappedGetter (store) {
+    return rawGetter(
+      getNestedState(store.state, path), // local state
+      local.getters, // local getters
+      store.state, // root state
+      store.getters // root getters
+    )
+  }
 }
 
 function enableStrictMode (store) {
@@ -502,6 +725,15 @@ function getNestedState (state, path) {
   return path.length
     ? path.reduce(function (state, key) { return state[key]; }, state)
     : state
+}
+
+function unifyObjectStyle (type, payload, options) {
+  if (isObject(type) && type.type) {
+    options = payload
+    payload = type
+    type = type.type
+  }
+  return { type: type, payload: payload, options: options }
 }
 
 function install (_Vue) {
@@ -523,6 +755,7 @@ if (typeof window !== 'undefined' && window.Vue) {
 var index = {
   Store: Store,
   install: install,
+  version: '2.1.1',
   mapState: mapState,
   mapMutations: mapMutations,
   mapGetters: mapGetters,
@@ -594,13 +827,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(44)
+__webpack_require__(40)
 
 /* script */
 __vue_exports__ = __webpack_require__(77)
 
 /* template */
-var __vue_template__ = __webpack_require__(94)
+var __vue_template__ = __webpack_require__(89)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -882,10 +1115,10 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(37)
+__webpack_require__(36)
 
 /* template */
-var __vue_template__ = __webpack_require__(86)
+var __vue_template__ = __webpack_require__(85)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -998,35 +1231,8 @@ exports.sync = function (store, router) {
 };
 
 /***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30px}.playingList .text{color:inherit}.playingItem{background-color:rgba(68,141,119,.24)}.playingList .song-item{float:right;position:absolute;right:30px}.hide{display:none}.show{display:\"inline-block\"}", ""]);
-
-// exports
-
-
-/***/ },
+/* 18 */,
 /* 19 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, ".column2{right:280px}", ""]);
-
-// exports
-
-
-/***/ },
-/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(0)();
@@ -1040,82 +1246,8 @@ exports.push([module.i, ".header{background-color:#f60;position:fixed;z-index:99
 
 
 /***/ },
+/* 20 */,
 /* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, ".fm-player{position:relative;top:0;left:185px;display:inline-block;margin:0 15px}.fm-player .fm-play-panel{margin-top:50px}#fm-panel .next-page{margin-top:0;height:90px;top:45%;transform:rotate(180deg)}#fm-panel .pre-page{left:0;margin-top:0;height:90px;top:45%;transform:rotate(0deg)}", ""]);
-
-// exports
-
-
-/***/ },
-/* 22 */,
-/* 23 */,
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, ".fm-songinfo .fm-album-name a,.fm-songinfo .fm-artist-name a{margin-left:.5em}", ""]);
-
-// exports
-
-
-/***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, ".ui-reelList-cell{position:relative;display:inline-block;width:26%}", ""]);
-
-// exports
-
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, "#searchBar{left:20%!important}", ""]);
-
-// exports
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, "#player{width:100%}.mb-layout-ft{text-align:left}.left-panel{position:absolute;left:0;top:0}.main-panel{width:auto;margin:22px 150px}.right-panel{position:absolute;width:120px;top:22px;right:0}", ""]);
-
-// exports
-
-
-/***/ },
-/* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(0)();
@@ -1129,21 +1261,7 @@ exports.push([module.i, ".ui-reelList-header-column{position:relative;display:in
 
 
 /***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)();
-// imports
-
-
-// module
-exports.push([module.i, "#fm-panel{display:flex;position:relative;flex-flow:column;background:#fff url(//mu6.bdstatic.com/cms/mbox/fm/night.jpg) repeat 0 0}#fm-panel .flex-bottom,#fm-panel .flex-top{flex:1}#fm-panel .flex-top{color:#fff;font-size:22px;margin-left:35%;margin-top:25}#fm-panel .flex-middle{flex:2}", ""]);
-
-// exports
-
-
-/***/ },
-/* 33 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(0)();
@@ -1157,33 +1275,123 @@ exports.push([module.i, ".column3{right:5px}.light{color:red;font-size:15px}", "
 
 
 /***/ },
-/* 34 */,
-/* 35 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
-// style-loader: Adds some css to the DOM by adding a <style> tag
+exports = module.exports = __webpack_require__(0)();
+// imports
 
-// load the styles
-var content = __webpack_require__(18);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-08eb9b04!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./PlayingList.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-08eb9b04!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./PlayingList.vue");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
+
+// module
+exports.push([module.i, "#player{width:100%}.mb-layout-ft{text-align:left}.left-panel{position:absolute;left:0;top:0}.main-panel{width:auto;margin:22px 150px}.right-panel{position:absolute;width:120px;top:22px;right:0}", ""]);
+
+// exports
+
 
 /***/ },
+/* 24 */,
+/* 25 */,
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, ".column2{right:280px}", ""]);
+
+// exports
+
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, "#searchBar{left:20%!important}", ""]);
+
+// exports
+
+
+/***/ },
+/* 28 */,
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, "#fm-panel{display:flex;position:relative;flex-flow:column;background:#fff url(//mu6.bdstatic.com/cms/mbox/fm/night.jpg) repeat 0 0}#fm-panel .flex-bottom,#fm-panel .flex-top{flex:1}#fm-panel .flex-top{color:#fff;font-size:22px;margin-left:35%;margin-top:25}#fm-panel .flex-middle{flex:2}", ""]);
+
+// exports
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, ".playingList li{color:rgba(41,79,52,.6);margin:0 0 0 30px}.playingList .text{color:inherit}.playingItem{background-color:rgba(68,141,119,.24)}.playingList .song-item{float:right;position:absolute;right:30px}.hide{display:none}.show{display:\"inline-block\"}", ""]);
+
+// exports
+
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, ".fm-player{position:relative;top:0;left:185px;display:inline-block;margin:0 15px}.fm-player .fm-play-panel{margin-top:50px}#fm-panel .next-page{margin-top:0;height:90px;top:45%;transform:rotate(180deg)}#fm-panel .pre-page{left:0;margin-top:0;height:90px;top:45%;transform:rotate(0deg)}", ""]);
+
+// exports
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, ".ui-reelList-cell{position:relative;display:inline-block;width:26%}", ""]);
+
+// exports
+
+
+/***/ },
+/* 33 */,
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(0)();
+// imports
+
+
+// module
+exports.push([module.i, ".fm-songinfo .fm-album-name a,.fm-songinfo .fm-artist-name a{margin-left:.5em}", ""]);
+
+// exports
+
+
+/***/ },
+/* 35 */,
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1199,8 +1407,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-17b9b6fd!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Home.vue", function() {
-			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-17b9b6fd!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Home.vue");
+		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-055f15b5!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue", function() {
+			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-055f15b5!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1210,32 +1418,7 @@ if(false) {
 }
 
 /***/ },
-/* 37 */
-/***/ function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(20);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, {});
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-24e4a473!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue", function() {
-			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-24e4a473!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./App.vue");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ },
+/* 37 */,
 /* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1251,8 +1434,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-2d9709fa!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slides.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-2d9709fa!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slides.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-17b1452d!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-17b1452d!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1262,15 +1445,13 @@ if(false) {
 }
 
 /***/ },
-/* 39 */,
-/* 40 */,
-/* 41 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(24);
+var content = __webpack_require__(22);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
 var update = __webpack_require__(1)(content, {});
@@ -1279,8 +1460,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-3b28a049!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slide.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-3b28a049!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slide.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-19a0326e!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Lry.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-19a0326e!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Lry.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1290,13 +1471,13 @@ if(false) {
 }
 
 /***/ },
-/* 42 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(25);
+var content = __webpack_require__(23);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
 var update = __webpack_require__(1)(content, {});
@@ -1305,8 +1486,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-4e5f14ad!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-4e5f14ad!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-200fab8a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-200fab8a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1316,6 +1497,8 @@ if(false) {
 }
 
 /***/ },
+/* 41 */,
+/* 42 */,
 /* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1331,8 +1514,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-517d089b!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SearchBox.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-517d089b!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SearchBox.vue");
+		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-468d6dfb!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Home.vue", function() {
+			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-468d6dfb!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Home.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1357,8 +1540,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-68861479!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-68861479!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Player.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-46af0399!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SearchBox.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-46af0399!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SearchBox.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1369,8 +1552,58 @@ if(false) {
 
 /***/ },
 /* 45 */,
-/* 46 */,
-/* 47 */,
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(29);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(1)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-6bfaa20d!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Cinema.vue", function() {
+			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-6bfaa20d!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Cinema.vue");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(30);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(1)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-798ace82!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./PlayingList.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-798ace82!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./PlayingList.vue");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ },
 /* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1386,8 +1619,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-b724d02a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-b724d02a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./SongList.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-95edc088!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slides.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-95edc088!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slides.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1412,8 +1645,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-b98e9ae2!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Cinema.vue", function() {
-			var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-b98e9ae2!./../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Cinema.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-c9009a22!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-c9009a22!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Song.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1423,13 +1656,14 @@ if(false) {
 }
 
 /***/ },
-/* 50 */
+/* 50 */,
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(33);
+var content = __webpack_require__(34);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
 var update = __webpack_require__(1)(content, {});
@@ -1438,8 +1672,8 @@ if(content.locals) module.exports = content.locals;
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-c3c3556a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Lry.vue", function() {
-			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-c3c3556a!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Lry.vue");
+		module.hot.accept("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-dbc86b72!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slide.vue", function() {
+			var newContent = require("!!./../../../node_modules/.0.26.1@css-loader/index.js!./../../../node_modules/.10.0.2@vue-loader/lib/style-rewriter.js?id=data-v-dbc86b72!./../../../node_modules/.10.0.2@vue-loader/lib/selector.js?type=styles&index=0!./Slide.vue");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -1449,7 +1683,6 @@ if(false) {
 }
 
 /***/ },
-/* 51 */,
 /* 52 */,
 /* 53 */,
 /* 54 */,
@@ -1463,13 +1696,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(49)
+__webpack_require__(46)
 
 /* script */
 __vue_exports__ = __webpack_require__(74)
 
 /* template */
-var __vue_template__ = __webpack_require__(99)
+var __vue_template__ = __webpack_require__(95)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1495,13 +1728,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(36)
+__webpack_require__(43)
 
 /* script */
 __vue_exports__ = __webpack_require__(75)
 
 /* template */
-var __vue_template__ = __webpack_require__(85)
+var __vue_template__ = __webpack_require__(92)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1527,13 +1760,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(50)
+__webpack_require__(39)
 
 /* script */
 __vue_exports__ = __webpack_require__(76)
 
 /* template */
-var __vue_template__ = __webpack_require__(100)
+var __vue_template__ = __webpack_require__(88)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1559,13 +1792,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(35)
+__webpack_require__(47)
 
 /* script */
 __vue_exports__ = __webpack_require__(78)
 
 /* template */
-var __vue_template__ = __webpack_require__(84)
+var __vue_template__ = __webpack_require__(96)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1591,13 +1824,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(43)
+__webpack_require__(44)
 
 /* script */
 __vue_exports__ = __webpack_require__(79)
 
 /* template */
-var __vue_template__ = __webpack_require__(92)
+var __vue_template__ = __webpack_require__(93)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1623,13 +1856,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(41)
+__webpack_require__(51)
 
 /* script */
 __vue_exports__ = __webpack_require__(80)
 
 /* template */
-var __vue_template__ = __webpack_require__(90)
+var __vue_template__ = __webpack_require__(101)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1655,13 +1888,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(38)
+__webpack_require__(48)
 
 /* script */
 __vue_exports__ = __webpack_require__(81)
 
 /* template */
-var __vue_template__ = __webpack_require__(87)
+var __vue_template__ = __webpack_require__(97)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1687,13 +1920,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(42)
+__webpack_require__(49)
 
 /* script */
 __vue_exports__ = __webpack_require__(82)
 
 /* template */
-var __vue_template__ = __webpack_require__(91)
+var __vue_template__ = __webpack_require__(99)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -1719,13 +1952,13 @@ var __vue_exports__, __vue_options__
 var __vue_styles__ = {}
 
 /* styles */
-__webpack_require__(48)
+__webpack_require__(38)
 
 /* script */
 __vue_exports__ = __webpack_require__(83)
 
 /* template */
-var __vue_template__ = __webpack_require__(98)
+var __vue_template__ = __webpack_require__(87)
 __vue_options__ = __vue_exports__ = __vue_exports__ || {}
 if (
   typeof __vue_exports__.default === "object" ||
@@ -2270,10 +2503,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
             this.$store.dispatch('next')
         }
     },
+    updated: async function () {      
+        try {
+            if( !this.songinfo.song_id || (this.songinfo.song_id && this.item.songid != this.songinfo.song_id) ){                   
+                let detail = await __WEBPACK_IMPORTED_MODULE_0__store_apiProxy__["a" /* default */].songDetail(this.item.songid)
+                this.songinfo = detail.songinfo
+            }
+        }catch(err){
+            
+        }
+    },
     mounted: async function () {      
-        try {   
+        try {                               
             let detail = await __WEBPACK_IMPORTED_MODULE_0__store_apiProxy__["a" /* default */].songDetail(this.item.songid)
-            this.songinfo = detail.songinfo
+            this.songinfo = detail.songinfo               
         }catch(err){
             
         }
@@ -2325,7 +2568,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
     name: 'slides',
     data() {
         return {
-            currentIndex: 0
+            currentIndex: 0,
+            items:[]
         }
     },
     components: {
@@ -2334,22 +2578,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
     computed: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1_vuex__["mapState"])(['hearts']),
     methods: {
         pre:function(){
-            this.currentIndex >= 1   &&  this.currentIndex--
+            this.currentIndex >= 1   &&  this.currentIndex--               
         },
         next:function(){
             this.currentIndex < this.hearts.length && this.currentIndex++
-        },
-        filterItems:function(index){
-            if(this.currentIndex < 2){
-                return  index - this. currentIndex >= 0 && index - this. currentIndex <= 4
-            }else if(this.currentIndex >= this.hearts.length -2 ){
-                return  index + 5 < this.hearts.length
-            }else{
-                return  index - this. currentIndex >= 0 && index - this. currentIndex <= 4
-            }
-            return false
-        }
+        }       
     },
+    mounted:function(){
+        this.items = (this.hearts || []).slice(0,5)
+    },
+    watch:{
+        currentIndex(to,from){
+            if(to < 2){
+                this.items = this.hearts.slice(to,to + 5)
+            }else if (to >= this.hearts.length -2 ){
+                this.items = this.hearts.slice(this.hearts.length-5,this.hearts.length)
+            }else {
+                this.items = this.hearts.slice(to-2,to+3)
+            }
+        },
+        hearts(to,from){
+            this.items =  (this.hearts || []).slice(0,5)
+        }
+    }
 };
 
 
@@ -2538,133 +2789,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 
 
 /***/ },
-/* 84 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', [_vm._m(0), _c('div', {
-    staticClass: "playingList"
-  }, [_c('ul', {
-    on: {
-      "click": _vm.changePlayingId
-    }
-  }, _vm._l((_vm.list), function(item) {
-    return _c('li', {
-      key: item.songid,
-      staticClass: "ui-lrc-sentence ui-lrc-prev",
-      attrs: {
-        "data-id": item.songid
-      },
-      on: {
-        "mouseenter": function($event) {
-          $event.stopPropagation();
-          _vm.msenter($event)
-        },
-        "mouseleave": function($event) {
-          $event.stopPropagation();
-          _vm.msleave($event)
-        }
-      }
-    }, [_c('a', {
-      class: ['text', item.songid == _vm.pid ? 'playingItem' : ''],
-      attrs: {
-        "data-id": item.songid
-      }
-    }, [_vm._v(_vm._s(item.songname))]), _c('a', {
-      class: ['song-item', 'hide'],
-      attrs: {
-        "data-id": item.songid,
-        "href": "javascript:void(0)"
-      },
-      on: {
-        "click": function($event) {
-          $event.stopPropagation();
-          _vm.removeSong($event)
-        }
-      }
-    }, [_vm._v("x")])])
-  }))])])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "list list-temp ui-droppable playing",
-    attrs: {
-      "id": "list_temp"
-    }
-  }, [_c('a', {
-    staticClass: "icon column1-icon list-temp-icon",
-    attrs: {
-      "hidefocus": "true"
-    }
-  }), _c('a', {
-    staticClass: "text"
-  }, [_vm._v("收藏列表")]), _c('a', {
-    staticClass: "column1-icon listening-icon listen-icon-playing",
-    attrs: {
-      "hidefocus": "true"
-    }
-  })])
-}]}
-
-/***/ },
+/* 84 */,
 /* 85 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', [_c('search-box'), _c('div', {
-    staticClass: "default-main",
-    attrs: {
-      "id": "mainContent"
-    }
-  }, [_c('div', {
-    staticClass: "main-wrapper"
-  }, [_c('div', {
-    staticClass: "mb-layout-bd column1",
-    attrs: {
-      "id": "leftCol"
-    }
-  }, [_c('div', {
-    staticClass: "leftbar-bottom-bg"
-  }, [_c('div', {
-    staticClass: "leftbar-outer"
-  }, [_c('div', {
-    staticClass: "leftbar"
-  }, [_c('playing-list', {
-    attrs: {
-      "pid": _vm.playingId
-    },
-    on: {
-      "changePlayId": _vm.changePlayId
-    }
-  })])])])]), _c('div', {
-    staticClass: "mb-layout-bd column2"
-  }, [_c('div', {
-    staticClass: "tab-main ui-tabs ui-widget ui-widget-content ui-corner-all",
-    attrs: {
-      "id": "tab"
-    }
-  }, [_c('div', {
-    staticClass: "tab-content cfix"
-  }, [_c('song-list', {
-    on: {
-      "changePlayId": _vm.changePlayId
-    }
-  })])])]), _c('lry', {
-    directives: [{
-      name: "ref",
-      rawName: "v-ref",
-      value: (_vm.lryC),
-      expression: "lryC"
-    }],
-    attrs: {
-      "playingId": _vm.playingId,
-      "currentTime": _vm.currentTime,
-      "songDetails": _vm.songDetails
-    }
-  })])]), _c('player')])
-},staticRenderFns: []}
-
-/***/ },
-/* 86 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -2689,429 +2815,8 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 },staticRenderFns: []}
 
 /***/ },
+/* 86 */,
 /* 87 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', [_c('div', [_c('a', {
-    staticClass: "next-page pre-page",
-    attrs: {
-      "href": "javascript:;",
-      "title": ""
-    },
-    on: {
-      "click": _vm.pre
-    }
-  }, [_c('i', {
-    staticClass: "arrow velocity-animating"
-  })])]), _c('div', {
-    attrs: {
-      "id": "slides"
-    }
-  }, _vm._l((_vm.hearts), function(item, index) {
-    return (_vm.filterItems(index)) ? _c('slide', {
-      key: item.id,
-      attrs: {
-        "item": item
-      }
-    }) : _vm._e()
-  })), _c('div', [_c('a', {
-    staticClass: "next-page",
-    attrs: {
-      "href": "javascript:;",
-      "title": ""
-    },
-    on: {
-      "click": _vm.next
-    }
-  }, [_c('i', {
-    staticClass: "arrow velocity-animating"
-  })])])])
-},staticRenderFns: []}
-
-/***/ },
-/* 88 */,
-/* 89 */,
-/* 90 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "fm-player"
-  }, [_c('div', {
-    staticClass: "fm-album"
-  }, [_c('a', {
-    staticClass: "play stop",
-    attrs: {
-      "href": "javascript:;",
-      "target": "_blank",
-      "hidefocus": "true",
-      "title": "播放[空格键]"
-    }
-  }, [_c('img', {
-    staticStyle: {
-      "display": "block"
-    },
-    attrs: {
-      "src": _vm.songinfo.pic_big ? _vm.songinfo.pic_big : "",
-      "width": "240",
-      "height": "240",
-      "title": ""
-    }
-  })]), _c('div', {
-    staticClass: "mask",
-    staticStyle: {
-      "display": "block"
-    }
-  }), _c('a', {
-    staticClass: "mask-text",
-    staticStyle: {
-      "display": "inline"
-    },
-    attrs: {
-      "href": "javascript:;",
-      "title": "播放[空格键]"
-    },
-    on: {
-      "click": _vm.play
-    }
-  }, [_vm._v("点击播放")])]), _c('div', {
-    staticClass: "fm-songinfo"
-  }, [_c('p', {
-    staticClass: "fm-song-title"
-  }, [_c('a', {
-    attrs: {
-      "target": "_blank",
-      "title": "item.title",
-      "href": "javascript:void()"
-    }
-  }, [_vm._v(_vm._s(_vm.item.title))])]), _c('p', {
-    staticClass: "fm-album-name"
-  }, [_vm._v("\n            专辑："), _c('a', {
-    attrs: {
-      "target": "_blank",
-      "title": "",
-      "href": _vm.songinfo.album_id ? "http://music.baidu.com/album/" + _vm.songinfo.album_id : ""
-    }
-  }, [_vm._v(_vm._s(_vm.songinfo.album_title))])]), _c('p', {
-    staticClass: "fm-artist-name",
-    attrs: {
-      "target": ""
-    }
-  }, [_vm._v("\n            演唱："), _c('a', {
-    attrs: {
-      "target": "_blank",
-      "title": _vm.item.artist,
-      "href": _vm.songinfo.ting_uid ? "http://music.baidu.com/artist/" + _vm.songinfo.ting_uid : ""
-    }
-  }, [_vm._v(_vm._s(_vm.item.artist))])])]), _c('div', {
-    staticClass: "fm-play-panel"
-  }, [_c('ul', [_c('li', {
-    staticClass: "fm-play"
-  }, [_c('a', {
-    staticClass: "play stop",
-    attrs: {
-      "href": "javascript:;",
-      "title": "播放[空格键]",
-      "hidefocus": "true"
-    },
-    on: {
-      "click": _vm.play
-    }
-  })]), _c('li', {
-    staticClass: "fm-next"
-  }, [_c('a', {
-    attrs: {
-      "href": "javascript:;",
-      "title": "下一首[→]",
-      "hidefocus": "true"
-    },
-    on: {
-      "click": function($event) {
-        $event.stopPropagation();
-        _vm.next($event)
-      }
-    }
-  })]), _vm._m(0)])])])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('li', {
-    staticClass: "fm-trashcan"
-  }, [_c('a', {
-    attrs: {
-      "href": "javascript:;",
-      "title": "垃圾桶",
-      "hidefocus": "true"
-    }
-  })])
-}]}
-
-/***/ },
-/* 91 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    class: _vm.classList,
-    staticStyle: {
-      "top": "0px"
-    },
-    attrs: {
-      "reellist-row": "0"
-    }
-  }, [_c('div', {
-    staticClass: "ui-reelList-cell  c0"
-  }, [_c('div', {
-    staticClass: "ui-reelList-checkbox",
-    on: {
-      "click": function($event) {
-        $event.stopPropagation();
-        _vm.checkSong($event)
-      }
-    }
-  }, [_c('span')]), _c('span', {
-    staticClass: "listening-icon"
-  }), _c('span', {
-    staticClass: "similar-icon cur-similar"
-  }), _c('span', {
-    staticClass: "ui-reelList-songname"
-  }, [_c('span', {
-    staticClass: "songname-txt"
-  }, [_vm._v(_vm._s(_vm.song.songname))])])]), _c('div', {
-    staticClass: "ui-reelList-cell  c1"
-  }, [_c('a', {
-    staticClass: "a-link"
-  }, [_vm._v(_vm._s(_vm.song.artistname))])]), _c('div', {
-    staticClass: "ui-reelList-cell  c2"
-  }, [_vm._v("《"), _c('a', {
-    staticClass: "a-link"
-  }, [_vm._v(_vm._s(_vm.song.album))]), _vm._v("》")]), _c('div', {
-    staticClass: "ui-reelList-cell  c3",
-    staticStyle: {
-      "width": "auto"
-    }
-  }, [_c('span', {
-    attrs: {
-      "data-id": _vm.song.songid
-    },
-    on: {
-      "click": function($event) {
-        $event.stopPropagation();
-        _vm.addSong($event)
-      }
-    }
-  }, [_vm._v("+")]), _c('span', {
-    attrs: {
-      "data-id": _vm.song.songid
-    },
-    on: {
-      "click": function($event) {
-        $event.stopPropagation();
-        _vm.changePlayingId($event)
-      }
-    }
-  }, [_vm._v(">>")])])])
-},staticRenderFns: []}
-
-/***/ },
-/* 92 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "mb-layout-hd cmb-comm",
-    attrs: {
-      "alog-alias": "mbox-header",
-      "monkey": "mbox-header"
-    }
-  }, [_c('div', {
-    staticClass: "top-banner"
-  }, [_c('div', {
-    staticStyle: {
-      "left": "556px"
-    },
-    attrs: {
-      "id": "searchBar"
-    }
-  }, [_c('div', {
-    attrs: {
-      "action": "search"
-    }
-  }, [_c('span', {
-    staticClass: "ui-watermark-container ui-watermark-input"
-  }, [_c('input', {
-    directives: [{
-      name: "model",
-      rawName: "v-model",
-      value: (_vm.keyWords),
-      expression: "keyWords"
-    }],
-    staticClass: "sug-input",
-    attrs: {
-      "type": "text",
-      "placeholder": "输入歌曲、歌手、专辑名",
-      "size": "24",
-      "autocomplete": "off",
-      "name": "key",
-      "id": "search-sug-input"
-    },
-    domProps: {
-      "value": _vm._s(_vm.keyWords)
-    },
-    on: {
-      "keyup": function($event) {
-        if (_vm._k($event.keyCode, "enter", 13)) { return; }
-        _vm.search($event)
-      },
-      "input": function($event) {
-        if ($event.target.composing) { return; }
-        _vm.keyWords = $event.target.value
-      }
-    }
-  })]), _c('input', {
-    attrs: {
-      "type": "button",
-      "id": "search-sug-submit",
-      "value": ""
-    },
-    on: {
-      "click": _vm.search
-    }
-  }), _vm._m(0)])])])])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "sug-result",
-    staticStyle: {
-      "display": "none"
-    }
-  }, [_c('p', {
-    staticClass: "sug-source sug-quku"
-  }, [_vm._v("曲库搜索")]), _c('dl', {
-    staticClass: "sug-artist clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("歌手")])]), _c('dl', {
-    staticClass: "sug-song clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("歌曲")])]), _c('dl', {
-    staticClass: "sug-album clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("专辑")])])])
-}]}
-
-/***/ },
-/* 93 */,
-/* 94 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    staticClass: "mb-layout-ft minwidth",
-    attrs: {
-      "onselectstart": "return false;",
-      "alog-alias": "mbox-play-ctrl",
-      "monkey": "mbox-play-ctrl"
-    }
-  }, [_c('div', {
-    staticClass: "panel",
-    attrs: {
-      "id": "playPanel"
-    }
-  }, [_c('div', {
-    staticClass: "panel-inner"
-  }, [_c('div', {
-    staticClass: "left-panel",
-    attrs: {
-      "id": "leftPanel"
-    }
-  }, [_c('ul', {
-    staticClass: "play-btn"
-  }, [_c('li', {
-    staticClass: "prev",
-    on: {
-      "click": _vm.pre
-    }
-  }, [_vm._m(0)]), _c('li', {
-    class: ['play wg-button', _vm.paused ? 'stop' : ''],
-    attrs: {
-      "title": "暂停"
-    },
-    on: {
-      "click": _vm.outerPlay
-    }
-  }, [_vm._m(1)]), _c('li', {
-    staticClass: "next",
-    on: {
-      "click": _vm.next
-    }
-  }, [_vm._m(2)])])]), _c('div', {
-    staticClass: "main-panel"
-  }, [_c('div', {
-    staticClass: "pane"
-  }, [_c('audio', {
-    attrs: {
-      "volume": "-1",
-      "id": "player",
-      "controls": "",
-      "data-id": _vm.playingId
-    },
-    on: {
-      "timeupdate": _vm.timeupdate,
-      "ended": _vm.ended,
-      "pause": _vm.togglePlay,
-      "play": _vm.togglePlay
-    }
-  })])]), _c('div', {
-    staticClass: "right-panel"
-  }, [_c('a', {
-    staticClass: "switch-fm-btn",
-    attrs: {
-      "href": "javascript:;",
-      "id": "switchFm",
-      "title": "随便听听"
-    },
-    on: {
-      "click": _vm.listenHearts
-    }
-  }, [_c('i', {
-    staticClass: "icon-ting"
-  }), _c('span', [_vm._v("随心听")])])])])])])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('a', {
-    staticClass: "wg-button",
-    attrs: {
-      "hidefocus": "true",
-      "title": "上一首[←]"
-    }
-  }, [_c('span', {
-    staticClass: "wg-button-inner"
-  })])
-},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('span', {
-    staticClass: "wg-button-inner"
-  }, [_c('a', {
-    attrs: {
-      "hidefocus": "true"
-    }
-  })])
-},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('a', {
-    staticClass: "wg-button",
-    attrs: {
-      "hidefocus": "true",
-      "title": "下一首[→]"
-    }
-  }, [_c('span', {
-    staticClass: "wg-button-inner"
-  })])
-}]}
-
-/***/ },
-/* 95 */,
-/* 96 */,
-/* 97 */,
-/* 98 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -3294,25 +2999,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 99 */
-/***/ function(module, exports) {
-
-module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
-    attrs: {
-      "id": "fm-panel"
-    }
-  }, [_c('div', {
-    staticClass: "flex-top"
-  }, [_c('h1', [_vm._v("当前播放歌曲:" + _vm._s(_vm.songDetail ? _vm.songDetail.songinfo.title : ''))])]), _c('div', {
-    staticClass: "flex-middle"
-  }, [_c('Slides')]), _c('div', {
-    staticClass: "flex-bottom"
-  }, [_c('player')])])
-},staticRenderFns: []}
-
-/***/ },
-/* 100 */
+/* 88 */
 /***/ function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
@@ -3388,7 +3075,571 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
 }]}
 
 /***/ },
-/* 101 */,
+/* 89 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "mb-layout-ft minwidth",
+    attrs: {
+      "onselectstart": "return false;",
+      "alog-alias": "mbox-play-ctrl",
+      "monkey": "mbox-play-ctrl"
+    }
+  }, [_c('div', {
+    staticClass: "panel",
+    attrs: {
+      "id": "playPanel"
+    }
+  }, [_c('div', {
+    staticClass: "panel-inner"
+  }, [_c('div', {
+    staticClass: "left-panel",
+    attrs: {
+      "id": "leftPanel"
+    }
+  }, [_c('ul', {
+    staticClass: "play-btn"
+  }, [_c('li', {
+    staticClass: "prev",
+    on: {
+      "click": _vm.pre
+    }
+  }, [_vm._m(0)]), _c('li', {
+    class: ['play wg-button', _vm.paused ? 'stop' : ''],
+    attrs: {
+      "title": "暂停"
+    },
+    on: {
+      "click": _vm.outerPlay
+    }
+  }, [_vm._m(1)]), _c('li', {
+    staticClass: "next",
+    on: {
+      "click": _vm.next
+    }
+  }, [_vm._m(2)])])]), _c('div', {
+    staticClass: "main-panel"
+  }, [_c('div', {
+    staticClass: "pane"
+  }, [_c('audio', {
+    attrs: {
+      "volume": "-1",
+      "id": "player",
+      "controls": "",
+      "data-id": _vm.playingId
+    },
+    on: {
+      "timeupdate": _vm.timeupdate,
+      "ended": _vm.ended,
+      "pause": _vm.togglePlay,
+      "play": _vm.togglePlay
+    }
+  })])]), _c('div', {
+    staticClass: "right-panel"
+  }, [_c('a', {
+    staticClass: "switch-fm-btn",
+    attrs: {
+      "href": "javascript:;",
+      "id": "switchFm",
+      "title": "随便听听"
+    },
+    on: {
+      "click": _vm.listenHearts
+    }
+  }, [_c('i', {
+    staticClass: "icon-ting"
+  }), _c('span', [_vm._v("随心听")])])])])])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('a', {
+    staticClass: "wg-button",
+    attrs: {
+      "hidefocus": "true",
+      "title": "上一首[←]"
+    }
+  }, [_c('span', {
+    staticClass: "wg-button-inner"
+  })])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('span', {
+    staticClass: "wg-button-inner"
+  }, [_c('a', {
+    attrs: {
+      "hidefocus": "true"
+    }
+  })])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('a', {
+    staticClass: "wg-button",
+    attrs: {
+      "hidefocus": "true",
+      "title": "下一首[→]"
+    }
+  }, [_c('span', {
+    staticClass: "wg-button-inner"
+  })])
+}]}
+
+/***/ },
+/* 90 */,
+/* 91 */,
+/* 92 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', [_c('search-box'), _c('div', {
+    staticClass: "default-main",
+    attrs: {
+      "id": "mainContent"
+    }
+  }, [_c('div', {
+    staticClass: "main-wrapper"
+  }, [_c('div', {
+    staticClass: "mb-layout-bd column1",
+    attrs: {
+      "id": "leftCol"
+    }
+  }, [_c('div', {
+    staticClass: "leftbar-bottom-bg"
+  }, [_c('div', {
+    staticClass: "leftbar-outer"
+  }, [_c('div', {
+    staticClass: "leftbar"
+  }, [_c('playing-list', {
+    attrs: {
+      "pid": _vm.playingId
+    },
+    on: {
+      "changePlayId": _vm.changePlayId
+    }
+  })])])])]), _c('div', {
+    staticClass: "mb-layout-bd column2"
+  }, [_c('div', {
+    staticClass: "tab-main ui-tabs ui-widget ui-widget-content ui-corner-all",
+    attrs: {
+      "id": "tab"
+    }
+  }, [_c('div', {
+    staticClass: "tab-content cfix"
+  }, [_c('song-list', {
+    on: {
+      "changePlayId": _vm.changePlayId
+    }
+  })])])]), _c('lry', {
+    directives: [{
+      name: "ref",
+      rawName: "v-ref",
+      value: (_vm.lryC),
+      expression: "lryC"
+    }],
+    attrs: {
+      "playingId": _vm.playingId,
+      "currentTime": _vm.currentTime,
+      "songDetails": _vm.songDetails
+    }
+  })])]), _c('player')])
+},staticRenderFns: []}
+
+/***/ },
+/* 93 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "mb-layout-hd cmb-comm",
+    attrs: {
+      "alog-alias": "mbox-header",
+      "monkey": "mbox-header"
+    }
+  }, [_c('div', {
+    staticClass: "top-banner"
+  }, [_c('div', {
+    staticStyle: {
+      "left": "556px"
+    },
+    attrs: {
+      "id": "searchBar"
+    }
+  }, [_c('div', {
+    attrs: {
+      "action": "search"
+    }
+  }, [_c('span', {
+    staticClass: "ui-watermark-container ui-watermark-input"
+  }, [_c('input', {
+    directives: [{
+      name: "model",
+      rawName: "v-model",
+      value: (_vm.keyWords),
+      expression: "keyWords"
+    }],
+    staticClass: "sug-input",
+    attrs: {
+      "type": "text",
+      "placeholder": "输入歌曲、歌手、专辑名",
+      "size": "24",
+      "autocomplete": "off",
+      "name": "key",
+      "id": "search-sug-input"
+    },
+    domProps: {
+      "value": _vm._s(_vm.keyWords)
+    },
+    on: {
+      "keyup": function($event) {
+        if (_vm._k($event.keyCode, "enter", 13)) { return; }
+        _vm.search($event)
+      },
+      "input": function($event) {
+        if ($event.target.composing) { return; }
+        _vm.keyWords = $event.target.value
+      }
+    }
+  })]), _c('input', {
+    attrs: {
+      "type": "button",
+      "id": "search-sug-submit",
+      "value": ""
+    },
+    on: {
+      "click": _vm.search
+    }
+  }), _vm._m(0)])])])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "sug-result",
+    staticStyle: {
+      "display": "none"
+    }
+  }, [_c('p', {
+    staticClass: "sug-source sug-quku"
+  }, [_vm._v("曲库搜索")]), _c('dl', {
+    staticClass: "sug-artist clearfix"
+  }, [_c('dt', {
+    staticClass: "sug-title clearfix"
+  }, [_vm._v("歌手")])]), _c('dl', {
+    staticClass: "sug-song clearfix"
+  }, [_c('dt', {
+    staticClass: "sug-title clearfix"
+  }, [_vm._v("歌曲")])]), _c('dl', {
+    staticClass: "sug-album clearfix"
+  }, [_c('dt', {
+    staticClass: "sug-title clearfix"
+  }, [_vm._v("专辑")])])])
+}]}
+
+/***/ },
+/* 94 */,
+/* 95 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    attrs: {
+      "id": "fm-panel"
+    }
+  }, [_c('div', {
+    staticClass: "flex-top"
+  }, [_c('h1', [_vm._v("当前播放歌曲:" + _vm._s(_vm.songDetail ? _vm.songDetail.songinfo.title : ''))])]), _c('div', {
+    staticClass: "flex-middle"
+  }, [_c('Slides')]), _c('div', {
+    staticClass: "flex-bottom"
+  }, [_c('player')])])
+},staticRenderFns: []}
+
+/***/ },
+/* 96 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', [_vm._m(0), _c('div', {
+    staticClass: "playingList"
+  }, [_c('ul', {
+    on: {
+      "click": _vm.changePlayingId
+    }
+  }, _vm._l((_vm.list), function(item) {
+    return _c('li', {
+      key: item.songid,
+      staticClass: "ui-lrc-sentence ui-lrc-prev",
+      attrs: {
+        "data-id": item.songid
+      },
+      on: {
+        "mouseenter": function($event) {
+          $event.stopPropagation();
+          _vm.msenter($event)
+        },
+        "mouseleave": function($event) {
+          $event.stopPropagation();
+          _vm.msleave($event)
+        }
+      }
+    }, [_c('a', {
+      class: ['text', item.songid == _vm.pid ? 'playingItem' : ''],
+      attrs: {
+        "data-id": item.songid
+      }
+    }, [_vm._v(_vm._s(item.songname))]), _c('a', {
+      class: ['song-item', 'hide'],
+      attrs: {
+        "data-id": item.songid,
+        "href": "javascript:void(0)"
+      },
+      on: {
+        "click": function($event) {
+          $event.stopPropagation();
+          _vm.removeSong($event)
+        }
+      }
+    }, [_vm._v("x")])])
+  }))])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "list list-temp ui-droppable playing",
+    attrs: {
+      "id": "list_temp"
+    }
+  }, [_c('a', {
+    staticClass: "icon column1-icon list-temp-icon",
+    attrs: {
+      "hidefocus": "true"
+    }
+  }), _c('a', {
+    staticClass: "text"
+  }, [_vm._v("收藏列表")]), _c('a', {
+    staticClass: "column1-icon listening-icon listen-icon-playing",
+    attrs: {
+      "hidefocus": "true"
+    }
+  })])
+}]}
+
+/***/ },
+/* 97 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', [_c('div', [_c('a', {
+    staticClass: "next-page pre-page",
+    attrs: {
+      "href": "javascript:;",
+      "title": ""
+    },
+    on: {
+      "click": _vm.pre
+    }
+  }, [_c('i', {
+    staticClass: "arrow velocity-animating"
+  })])]), _c('div', {
+    attrs: {
+      "id": "slides"
+    }
+  }, _vm._l((_vm.items), function(item, index) {
+    return _c('slide', {
+      key: item.id,
+      attrs: {
+        "item": item
+      }
+    })
+  })), _c('div', [_c('a', {
+    staticClass: "next-page",
+    attrs: {
+      "href": "javascript:;",
+      "title": ""
+    },
+    on: {
+      "click": _vm.next
+    }
+  }, [_c('i', {
+    staticClass: "arrow velocity-animating"
+  })])])])
+},staticRenderFns: []}
+
+/***/ },
+/* 98 */,
+/* 99 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    class: _vm.classList,
+    staticStyle: {
+      "top": "0px"
+    },
+    attrs: {
+      "reellist-row": "0"
+    }
+  }, [_c('div', {
+    staticClass: "ui-reelList-cell  c0"
+  }, [_c('div', {
+    staticClass: "ui-reelList-checkbox",
+    on: {
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.checkSong($event)
+      }
+    }
+  }, [_c('span')]), _c('span', {
+    staticClass: "listening-icon"
+  }), _c('span', {
+    staticClass: "similar-icon cur-similar"
+  }), _c('span', {
+    staticClass: "ui-reelList-songname"
+  }, [_c('span', {
+    staticClass: "songname-txt"
+  }, [_vm._v(_vm._s(_vm.song.songname))])])]), _c('div', {
+    staticClass: "ui-reelList-cell  c1"
+  }, [_c('a', {
+    staticClass: "a-link"
+  }, [_vm._v(_vm._s(_vm.song.artistname))])]), _c('div', {
+    staticClass: "ui-reelList-cell  c2"
+  }, [_vm._v("《"), _c('a', {
+    staticClass: "a-link"
+  }, [_vm._v(_vm._s(_vm.song.album))]), _vm._v("》")]), _c('div', {
+    staticClass: "ui-reelList-cell  c3",
+    staticStyle: {
+      "width": "auto"
+    }
+  }, [_c('span', {
+    attrs: {
+      "data-id": _vm.song.songid
+    },
+    on: {
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.addSong($event)
+      }
+    }
+  }, [_vm._v("+")]), _c('span', {
+    attrs: {
+      "data-id": _vm.song.songid
+    },
+    on: {
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.changePlayingId($event)
+      }
+    }
+  }, [_vm._v(">>")])])])
+},staticRenderFns: []}
+
+/***/ },
+/* 100 */,
+/* 101 */
+/***/ function(module, exports) {
+
+module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('div', {
+    staticClass: "fm-player"
+  }, [_c('div', {
+    staticClass: "fm-album"
+  }, [_c('a', {
+    staticClass: "play stop",
+    attrs: {
+      "href": "javascript:;",
+      "target": "_blank",
+      "hidefocus": "true",
+      "title": "播放[空格键]"
+    }
+  }, [_c('img', {
+    staticStyle: {
+      "display": "block"
+    },
+    attrs: {
+      "src": _vm.songinfo.pic_big ? _vm.songinfo.pic_big : "",
+      "width": "240",
+      "height": "240",
+      "title": ""
+    }
+  })]), _c('div', {
+    staticClass: "mask",
+    staticStyle: {
+      "display": "block"
+    }
+  }), _c('a', {
+    staticClass: "mask-text",
+    staticStyle: {
+      "display": "inline"
+    },
+    attrs: {
+      "href": "javascript:;",
+      "title": "播放[空格键]"
+    },
+    on: {
+      "click": _vm.play
+    }
+  }, [_vm._v("点击播放")])]), _c('div', {
+    staticClass: "fm-songinfo"
+  }, [_c('p', {
+    staticClass: "fm-song-title"
+  }, [_c('a', {
+    attrs: {
+      "target": "_blank",
+      "title": "item.title",
+      "href": "javascript:void()"
+    }
+  }, [_vm._v(_vm._s(_vm.item.title))])]), _c('p', {
+    staticClass: "fm-album-name"
+  }, [_vm._v("\n            专辑："), _c('a', {
+    attrs: {
+      "target": "_blank",
+      "title": "",
+      "href": _vm.songinfo.album_id ? "http://music.baidu.com/album/" + _vm.songinfo.album_id : ""
+    }
+  }, [_vm._v(_vm._s(_vm.songinfo.album_title))])]), _c('p', {
+    staticClass: "fm-artist-name",
+    attrs: {
+      "target": ""
+    }
+  }, [_vm._v("\n            演唱："), _c('a', {
+    attrs: {
+      "target": "_blank",
+      "title": _vm.item.artist,
+      "href": _vm.songinfo.ting_uid ? "http://music.baidu.com/artist/" + _vm.songinfo.ting_uid : ""
+    }
+  }, [_vm._v(_vm._s(_vm.item.artist))])])]), _c('div', {
+    staticClass: "fm-play-panel"
+  }, [_c('ul', [_c('li', {
+    staticClass: "fm-play"
+  }, [_c('a', {
+    staticClass: "play stop",
+    attrs: {
+      "href": "javascript:;",
+      "title": "播放[空格键]",
+      "hidefocus": "true"
+    },
+    on: {
+      "click": _vm.play
+    }
+  })]), _c('li', {
+    staticClass: "fm-next"
+  }, [_c('a', {
+    attrs: {
+      "href": "javascript:;",
+      "title": "下一首[→]",
+      "hidefocus": "true"
+    },
+    on: {
+      "click": function($event) {
+        $event.stopPropagation();
+        _vm.next($event)
+      }
+    }
+  })]), _vm._m(0)])])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
+  return _c('li', {
+    staticClass: "fm-trashcan"
+  }, [_c('a', {
+    attrs: {
+      "href": "javascript:;",
+      "title": "垃圾桶",
+      "hidefocus": "true"
+    }
+  })])
+}]}
+
+/***/ },
 /* 102 */,
 /* 103 */,
 /* 104 */
