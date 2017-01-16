@@ -62,7 +62,7 @@ const store = new Vuex.Store({
         async songDetail({commit}, id) {
             let detail = await apiProxy.songDetail(id)
             commit('songDetail', detail)
-        },
+        },        
         /*   */
         async channels({state}) {
             let channels = await apiProxy.channels()

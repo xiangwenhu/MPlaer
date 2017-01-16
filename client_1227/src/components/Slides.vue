@@ -38,16 +38,21 @@
         },
         computed: mapState(['hearts']),
         methods: {
-            pre: function () {
-                this.currentIndex >= 1 && this.currentIndex--
+            pre:function(){
+                this.currentIndex >= 1   &&  this.currentIndex--
             },
-            next: function () {
+            next:function(){
                 this.currentIndex < this.hearts.length && this.currentIndex++
             },
-            /* 不太合理 */
-            filterItems: function (index) {
-                return (index - this.currentIndex >= 0 && index - this.currentIndex <= 4) || (index - this.currentIndex < 0 && index - this.currentIndex >= 4) 
-
+            filterItems:function(index){
+                if(this.currentIndex < 2){
+                    return  index - this. currentIndex >= 0 && index - this. currentIndex <= 4
+                }else if(this.currentIndex >= this.hearts.length -2 ){
+                    return  index + 5 < this.hearts.length
+                }else{
+                    return  index - this. currentIndex >= 0 && index - this. currentIndex <= 4
+                }
+                return false
             }
         },
     }
