@@ -14,7 +14,10 @@
             <a class="a-link">{{song.artistname}}</a>
         </div>
         <div class="ui-reelList-cell  c2">《<a class="a-link">{{song.album}}</a>》</div>
-        <div class="ui-reelList-cell  c3" style="width:auto"><span :data-id="song.songid" @click.stop="addSong">+</span><span :data-id="song.songid" @click.stop="changePlayingId" >>></span></div>
+        <div class="ui-reelList-cell  c3" style="width:auto">
+            <a class="sug-add-btn" :data-id="song.songid" @click.stop="addSong"><span>添加</span></a> 
+            <a class="sug-play-btn" :data-id="song.songid" @click.stop="changePlayingId" style="padding-left: 5px"><span>播放</span></a>
+        </div>
     </div>
 
     <div class="ui-reelList-viewport">

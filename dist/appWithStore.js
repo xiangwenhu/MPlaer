@@ -2718,6 +2718,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
 
 
 
@@ -3623,7 +3626,8 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticStyle: {
       "width": "auto"
     }
-  }, [_c('span', {
+  }, [_c('a', {
+    staticClass: "sug-add-btn",
     attrs: {
       "data-id": _vm.song.songid
     },
@@ -3633,7 +3637,11 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.addSong($event)
       }
     }
-  }, [_vm._v("+")]), _c('span', {
+  }, [_c('span', [_vm._v("添加")])]), _c('a', {
+    staticClass: "sug-play-btn",
+    staticStyle: {
+      "padding-left": "5px"
+    },
     attrs: {
       "data-id": _vm.song.songid
     },
@@ -3643,7 +3651,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
         _vm.changePlayingId($event)
       }
     }
-  }, [_vm._v(">>")])])])
+  }, [_c('span', [_vm._v("播放")])])])])
 },staticRenderFns: []}
 
 /***/ },
