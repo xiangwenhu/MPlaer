@@ -2315,6 +2315,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
                     player.src = '/api/song?fileLink=' + to.bitrate['file_link']  
                     player.play()
                 },5)
+            }else{
+                this.$store.dispatch('next')
             }
       }
     },
@@ -3030,7 +3032,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "width": "180",
       "height": "180",
-      "src": _vm.songDetail ? _vm.songDetail.songinfo.pic_big : '//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'
+      "src": _vm.songDetail && _vm.songDetail.songinfo ? _vm.songDetail.songinfo.pic_big : '//mu9.bdstatic.com/player/static/css/image-32/default_album.jpg'
     }
   })]), _c('div', {
     staticClass: "album-name"
@@ -3040,7 +3042,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "target": "_blank",
       "href": "javascript:void(0)"
     }
-  }, [_vm._v(_vm._s(_vm.songDetail ? _vm.songDetail.songinfo.author : ''))]), _c('span', {
+  }, [_vm._v(_vm._s(_vm.songDetail && _vm.songDetail.songinfo ? _vm.songDetail.songinfo.author : ''))]), _c('span', {
     staticClass: "icon"
   })])]), _c('div', {
     staticClass: "lrc-wrapper ui-lrc ui-lrc-vertical lrc",

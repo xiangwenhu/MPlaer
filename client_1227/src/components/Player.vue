@@ -87,6 +87,8 @@
                         player.src = '/api/song?fileLink=' + to.bitrate['file_link']  
                         player.play()
                     },5)
+                }else{
+                    this.$store.dispatch('next')
                 }
           }
         },
