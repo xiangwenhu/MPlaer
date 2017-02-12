@@ -24,10 +24,10 @@ const localCache = {
         songname: '逆流成河',
         songid: '106125582'
     }],
+    suggestions:null,
 }
 
-let state = Object.assign({}, localCache, localCacheProxy.getCache(MPLAYER_PL), {
-    playingId: null,
+let state = Object.assign({}, localCache, localCacheProxy.getCache(MPLAYER_PL), {  
     markedSongs:[],
     playMode:1 ,
     songDetail:null 
@@ -76,10 +76,13 @@ const store = new Vuex.Store({
             commit('changeMode', 10)
             dispatch('next')
         },
+        async suggestions({dispatch,state},keyWords){
+            state.suggestions = await apiProxy.suggestions(keyWords)
+        },
         /* 更换当前播放的id */
-        changeId({commit, dispatch}, id) {
+        changeId({commit, dispatch,state}, id) {
             commit('changeId', id)
-            dispatch('songDetail', id)
+            dispatch('songDetail', id)           
         },
         /* 下一曲 */
         next({dispatch, getters}) {
@@ -103,6 +106,7 @@ const store = new Vuex.Store({
         /*更换播放的歌曲*/
         changeId(state, id) {
             state.playingId = id
+            localCacheProxy.setCache(MPLAYER_PL, state)
         },
         /* 默认加载热门歌曲 */
         hotSongs(state, hotSongs) {

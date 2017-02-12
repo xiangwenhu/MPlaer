@@ -50,10 +50,12 @@
            
         },
         mounted: function () {
-            if(this.$store.state.favorites){
-                this.$store.dispatch('changeId',this.$store.state.favorites[0].songid)
+            if(this.$store.state.playingId){
+                 this.$store.dispatch('changeId',this.$store.state.playingId)
+            }else if(this.$store.state.favorites){
+                this.$store.dispatch('changeId',this.$store.state.favorites[0].songid)                                 
             }  
-            this.$store.dispatch('channels')         
+            this.$store.dispatch('channels')       
         }
     }
 </script>

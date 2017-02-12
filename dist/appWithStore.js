@@ -815,6 +815,10 @@ const defaultOptions = {
     async channelSongs(cname){
         let data = await this.fetchData(this.baseUrl + 'getAll?query=' + encodeURIComponent('from=qianqian&version=2.1.0&method=baidu.ting.radio.getChannelSong&format=json&pn=0&rn=199&channelname=' + cname))
         return data
+    },
+    async suggestions(title){
+        let iq = encodeURIComponent(`from=qianqian&version=2.1.0&method=baidu.ting.search.catalogSug&format=json&query=${title}`)
+        return await this.fetchData(`${this.baseUrl}getAll?query=${iq}`)
     }
 };
 
@@ -925,10 +929,10 @@ const localCache = {
         songname: '逆流成河',
         songid: '106125582'
     }],
+    suggestions:null,
 }
 
-let state = Object.assign({}, localCache, __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].getCache(MPLAYER_PL), {
-    playingId: null,
+let state = Object.assign({}, localCache, __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].getCache(MPLAYER_PL), {  
     markedSongs:[],
     playMode:1 ,
     songDetail:null 
@@ -977,10 +981,13 @@ const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
             commit('changeMode', 10)
             dispatch('next')
         },
+        async suggestions({dispatch,state},keyWords){
+            state.suggestions = await __WEBPACK_IMPORTED_MODULE_2__apiProxy__["a" /* default */].suggestions(keyWords)
+        },
         /* 更换当前播放的id */
-        changeId({commit, dispatch}, id) {
+        changeId({commit, dispatch,state}, id) {
             commit('changeId', id)
-            dispatch('songDetail', id)
+            dispatch('songDetail', id)           
         },
         /* 下一曲 */
         next({dispatch, getters}) {
@@ -1004,6 +1011,7 @@ const store = new __WEBPACK_IMPORTED_MODULE_1_vuex___default.a.Store({
         /*更换播放的歌曲*/
         changeId(state, id) {
             state.playingId = id
+            __WEBPACK_IMPORTED_MODULE_3__localCache__["a" /* default */].setCache(MPLAYER_PL, state)
         },
         /* 默认加载热门歌曲 */
         hotSongs(state, hotSongs) {
@@ -1313,7 +1321,7 @@ exports = module.exports = __webpack_require__(0)();
 
 
 // module
-exports.push([module.i, "#searchBar{left:20%!important}", ""]);
+exports.push([module.i, "#searchBar{left:20%!important}.sug-result{display:block}", ""]);
 
 // exports
 
@@ -2110,10 +2118,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
        
     },
     mounted: function () {
-        if(this.$store.state.favorites){
-            this.$store.dispatch('changeId',this.$store.state.favorites[0].songid)
+        if(this.$store.state.playingId){
+             this.$store.dispatch('changeId',this.$store.state.playingId)
+        }else if(this.$store.state.favorites){
+            this.$store.dispatch('changeId',this.$store.state.favorites[0].songid)                                 
         }  
-        this.$store.dispatch('channels')         
+        this.$store.dispatch('channels')       
     }
 };
 
@@ -2425,18 +2435,74 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //
 //
 //
-
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
 
 /* harmony default export */ exports["default"] = {
-    name: 'search-box',   
-    methods: {
-        search: async function (ev) {               
-            this.keyWords && this.$store.dispatch('searchAsync', this.keyWords)               
+    name: 'search-box',  
+    data(){
+        return {
+            displaySuggestions: false,
+            ticket : null
         }
-    }        
+    },
+    computed: {
+        suggestions(){
+            return (this.$store.state.suggestions && this.$store.state.suggestions.song) || [] 
+        }
+    }, 
+    methods: {
+        search: async function (ev) {    
+            this.clearHiddenSuggestions()          
+            this.keyWords && this.$store.dispatch('searchAsync', this.keyWords)               
+        },
+        getSuggestions: async function(){
+            this.clearHiddenSuggestions()
+            if(this.keyWords){
+                this.displaySuggestions = false
+                this.$store.dispatch('suggestions',this.keyWords)
+            }
+        },
+        playSong(ev){               
+            this.$store.dispatch('changeId',ev.currentTarget.getAttribute('data-id'))                
+        },
+        addSong(ev){
+            this.$store.commit('addSong',{
+                songid:ev.currentTarget.getAttribute('data-id'),
+                songname:ev.currentTarget.getAttribute('data-name')
+            })
+        },
+        hiddenSuggestions(){
+            this.displaySuggestions = false
+        },
+        delayHiddenSuggestions(){
+           this.ticket =  setTimeout(()=>this.hiddenSuggestions(),500)
+        },
+        clearHiddenSuggestions(){
+            if(this.ticket){
+                clearTimeout(this.ticket)
+                this.ticket = null
+            }
+        }            
+    },
+    watch:{
+        suggestions(to,from){
+            if(to && to.length > 0){
+                this.displaySuggestions = true
+            }
+        }    
+    }
+
 };
 
 
@@ -3298,13 +3364,15 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       "value": _vm._s(_vm.keyWords)
     },
     on: {
+      "blur": _vm.delayHiddenSuggestions,
+      "focus": _vm.getSuggestions,
+      "input": [function($event) {
+        if ($event.target.composing) { return; }
+        _vm.keyWords = $event.target.value
+      }, _vm.getSuggestions],
       "keyup": function($event) {
         if (_vm._k($event.keyCode, "enter", 13)) { return; }
         _vm.search($event)
-      },
-      "input": function($event) {
-        if ($event.target.composing) { return; }
-        _vm.keyWords = $event.target.value
       }
     }
   })]), _c('input', {
@@ -3316,29 +3384,71 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     on: {
       "click": _vm.search
     }
-  }), _vm._m(0)])])])])
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._c;
-  return _c('div', {
+  }), _c('div', {
+    directives: [{
+      name: "show",
+      rawName: "v-show",
+      value: (_vm.displaySuggestions && _vm.suggestions.length > 0),
+      expression: "displaySuggestions && suggestions.length > 0"
+    }],
     staticClass: "sug-result",
-    staticStyle: {
-      "display": "none"
+    on: {
+      "mouseenter": _vm.clearHiddenSuggestions,
+      "mouseleave": _vm.delayHiddenSuggestions
     }
   }, [_c('p', {
     staticClass: "sug-source sug-quku"
   }, [_vm._v("曲库搜索")]), _c('dl', {
-    staticClass: "sug-artist clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("歌手")])]), _c('dl', {
     staticClass: "sug-song clearfix"
   }, [_c('dt', {
     staticClass: "sug-title clearfix"
-  }, [_vm._v("歌曲")])]), _c('dl', {
-    staticClass: "sug-album clearfix"
-  }, [_c('dt', {
-    staticClass: "sug-title clearfix"
-  }, [_vm._v("专辑")])])])
-}]}
+  }, [_vm._v("歌曲")]), _vm._l((_vm.suggestions), function(sugg) {
+    return (!!sugg) ? _c('dd', {
+      staticClass: "first-item"
+    }, [_c('div', {
+      staticClass: "sug-item"
+    }, [_c('a', {
+      staticClass: "sug-song-detail",
+      attrs: {
+        "data-id": sugg.songid,
+        "href": 'http://music.baidu.com/song/' + sugg.songid + '?fr=ps||www.baidu.com',
+        "target": "_blank"
+      }
+    }, [_c('span', {
+      staticClass: "songname"
+    }, [_vm._v(_vm._s(sugg.songname))]), _c('span', {
+      staticClass: "artistname"
+    }, [_c('i', {
+      staticClass: "h-line"
+    }, [_vm._v("-")]), _vm._v(_vm._s(sugg.artistname))])])]), _c('div', {
+      staticClass: "item-op sug-quku-op",
+      attrs: {
+        "data-type": "song"
+      }
+    }, [_c('a', {
+      staticClass: "sug-play-btn",
+      attrs: {
+        "data-id": sugg.songid
+      },
+      on: {
+        "click": _vm.playSong
+      }
+    }, [_c('span')]), _c('span', {
+      staticClass: "separtor"
+    }), _c('a', {
+      staticClass: "sug-add-btn",
+      attrs: {
+        "data-id": sugg.songid,
+        "data-name": sugg.songname
+      },
+      on: {
+        "click": _vm.addSong
+      }
+    }, [_c('span')]), _c('span', {
+      staticClass: "separtor"
+    })])]) : _vm._e()
+  })], true)])])])])])
+},staticRenderFns: []}
 
 /***/ },
 /* 94 */,

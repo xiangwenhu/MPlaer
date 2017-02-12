@@ -39,5 +39,9 @@ export default {
     async channelSongs(cname){
         let data = await this.fetchData(this.baseUrl + 'getAll?query=' + encodeURIComponent('from=qianqian&version=2.1.0&method=baidu.ting.radio.getChannelSong&format=json&pn=0&rn=199&channelname=' + cname))
         return data
+    },
+    async suggestions(title){
+        let iq = encodeURIComponent(`from=qianqian&version=2.1.0&method=baidu.ting.search.catalogSug&format=json&query=${title}`)
+        return await this.fetchData(`${this.baseUrl}getAll?query=${iq}`)
     }
 }

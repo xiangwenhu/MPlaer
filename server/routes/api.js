@@ -29,7 +29,7 @@ router.get('/search/:keyWords', async (ctx)=>{
     ctx.body = data
 })
 .get('/getAll', async(ctx)=>{
-    let data = await apiProxy.getAll(ctx.query.baseUrl||null, decodeURIComponent(ctx.query.query))
+    let data = await apiProxy.getAll(ctx.query.baseUrl = null, ctx.query.query)
     ctx.body = data
 })
 

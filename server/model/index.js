@@ -62,7 +62,8 @@ module.exports =   {
         return async function(baseUrl = this.baseUrl,query){
             console.log('baseUrl:' + (baseUrl || this.baseUrl))
             console.log('query:' + query)
-            let fullUrl = baseUrl || this.baseUrl  +  '?' + query,
+            console.log('fullUrl:' + encodeURI(`${baseUrl || this.baseUrl}?${query}`))
+            let fullUrl = encodeURI(baseUrl || this.baseUrl  +  '?' + query),
                 data = await request.get(fullUrl)	
             return data
         }
